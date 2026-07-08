@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE — Wishlist</title>
+<style>
+  :root{
+    --maroon:#680202; --ink:#1a1a1a; --muted:#767676; --line:#ececec; --bg:#ffffff; --success:#2e7d4f;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f7f7f7; }
+  .app{ max-width:520px; margin:0 auto; background:var(--bg); min-height:100vh; padding-bottom:80px; }
+
+  .topbar{ position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--line); padding:16px 18px; display:flex; justify-content:space-between; align-items:center; }
+  .topbar h1{ font-size:1.05rem; font-weight:700; }
+  .topbar .count{ font-size:0.78rem; color:var(--muted); }
+
+  .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px 12px; padding:16px 18px; }
+  .card{ cursor:pointer; }
+  .card-image{ position:relative; width:100%; aspect-ratio:4/5; border-radius:12px; overflow:hidden; background:#f0ece7; }
+  .card-image img{ width:100%;height:100%;object-fit:cover; }
+  .card-condition{ position:absolute; top:8px;left:8px; background:rgba(255,255,255,0.92); color:var(--success); font-size:0.62rem; font-weight:700; padding:3px 8px; border-radius:12px; }
+  .card-heart{ position:absolute; top:8px;right:8px; width:28px;height:28px; border-radius:50%; background:rgba(255,255,255,0.92); display:flex;align-items:center;justify-content:center; cursor:pointer; }
+  .card-heart svg{ width:14px;height:14px; fill:var(--maroon); stroke:var(--maroon); }
+  .card-body{ padding-top:9px; }
+  .card-brand{ font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--maroon); }
+  .card-title{ font-size:0.82rem; font-weight:600; color:var(--ink); line-height:1.3; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-price-row{ display:flex; align-items:baseline; gap:6px; margin-top:5px; }
+  .card-price{ font-size:0.85rem; font-weight:800; color:var(--ink); }
+  .card-price-original{ font-size:0.68rem; color:var(--muted); text-decoration:line-through; }
+  .card-sold-out{
+    position:absolute; inset:0; background:rgba(255,255,255,0.8);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-sold-out span{ background:var(--ink); color:#fff; font-size:0.65rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; padding:5px 12px; border-radius:20px; }
+
+  .empty{ display:none; flex-direction:column; align-items:center; text-align:center; padding:80px 40px; }
+  .empty.show{ display:flex; }
+  .empty svg{ color:var(--line); margin-bottom:16px; }
+  .empty h3{ font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .empty p{ font-size:0.85rem; color:var(--muted); margin-bottom:20px; }
+  .empty button{ background:var(--maroon); color:#fff; border:none; padding:12px 28px; border-radius:10px; font-size:0.85rem; font-weight:700; cursor:pointer; }
+
+  @media (min-width:768px){
+    .app{ padding-bottom:0; max-width:900px; }
+    .grid{ grid-template-columns:repeat(4,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar"><h1>Wishlist</h1><span class="count" id="countLabel">3 items</span></div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty" id="emptyState">
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+    <h3>Your wishlist is empty</h3>
+    <p>Tap the heart on any item to save it here — but don't wait too long, everything's one of one.</p>
+    <button onclick="window.location.href='/products.html'">Start Shopping</button>
+  </div>
+
+  <div id="bottomNavRoot"></div>
+
+</div>
+<script type="module">
+import { getWishlist, removeFromWishlist } from "./js/wishlist.js";
+import { getProductById } from "./js/products.js";
+import { renderBottomNav } from "./js/bottom-nav.js";
+
+renderBottomNav("wishlist");
+
+const grid = document.getElementById("grid");
+const emptyState = document.getElementById("emptyState");
+const countLabel = document.getElementById("countLabel");
+
+let wishlistProducts = [];
+
+async function loadWishlist() {
+  const ids = getWishlist();
+  wishlistProducts = [];
+  for (const id of ids) {
+    const product = await getProductById(id);
+    if (product) wishlistProducts.push(product);
+    // Note: if a product doc no longer exists at all (deleted, not just
+    // sold), it's silently skipped rather than shown broken — the
+    // wishlist ID itself still lingers in localStorage as a harmless
+    // leftover unless you want to clean it here too.
+  }
+  render();
+}
+
+function render() {
+  countLabel.textContent = wishlistProducts.length + (wishlistProducts.length === 1 ? " item" : " items");
+  emptyState.classList.toggle("show", wishlistProducts.length === 0);
+  grid.style.display = wishlistProducts.length === 0 ? "none" : "grid";
+
+  grid.innerHTML = wishlistProducts.map(p => `
+    <div class="card" data-id="${p.id}">
+      <div class="card-image">
+        <img src="${(p.images && p.images[0]) || `https://placehold.co/300x375/680202/ffffff?text=${encodeURIComponent(p.brand || 'Item')}`}">
+        <div class="card-condition">${p.condition || ''}</div>
+        <div class="card-heart active" data-remove="${p.id}"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+        ${p.status !== 'live' ? '<div class="card-sold-out"><span>Sold Out</span></div>' : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-brand">${p.brand || ''}</div>
+        <div class="card-title">${p.title || ''}</div>
+        <div class="card-price-row">
+          <span class="card-price">₦${Number(p.price || 0).toLocaleString()}</span>
+          ${p.originalPrice ? `<span class="card-price-original">₦${Number(p.originalPrice).toLocaleString()}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+grid.addEventListener("click", (e) => {
+  const removeBtn = e.target.closest("[data-remove]");
+  if (removeBtn) {
+    e.stopPropagation();
+    removeFromWishlist(removeBtn.dataset.remove);
+    wishlistProducts = wishlistProducts.filter(p => p.id !== removeBtn.dataset.remove);
+    render();
+    return;
+  }
+  const card = e.target.closest(".card");
+  if (card) window.location.href = `/product-details.html?id=${card.dataset.id}`;
+});
+
+loadWishlist();
+</script>
+</body>
+</html>

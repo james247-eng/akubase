@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE Admin — Orders</title>
+<style>
+  :root{
+    --maroon:#680202; --maroon-tint:#fdeceb; --ink:#181818; --muted:#767676; --line:#ececec;
+    --bg:#f6f6f7; --card:#ffffff; --success:#2e7d4f; --success-bg:#eaf6ef;
+    --warn:#b5750f; --warn-bg:#fdf3e3; --danger:#b3261e; --danger-bg:#fdeceb;
+    --draft:#5b6b8c; --draft-bg:#eaeefd;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .shell{ display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  .sidebar{ background:#fff; border-right:1px solid var(--line); display:flex; flex-direction:column; padding:20px 14px; }
+  .sidebar-logo{ font-size:1.15rem; font-weight:800; color:var(--maroon); padding:6px 10px 20px; }
+  .nav-group-label{ font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); padding:14px 10px 6px; }
+  .nav-link{ display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:8px; font-size:0.86rem; font-weight:600; color:var(--ink); text-decoration:none; cursor:pointer; }
+  .nav-link svg{ width:17px;height:17px; flex-shrink:0; color:var(--muted); }
+  .nav-link.active{ background:var(--maroon-tint); color:var(--maroon); }
+  .nav-link.active svg{ color:var(--maroon); }
+  .nav-link:hover:not(.active){ background:var(--bg); }
+  .sidebar-foot{ margin-top:auto; display:flex; align-items:center; gap:10px; padding:12px 10px; border-top:1px solid var(--line); }
+  .avatar{ width:32px;height:32px;border-radius:50%; background:var(--maroon);color:#fff; display:flex;align-items:center;justify-content:center; font-size:0.78rem;font-weight:700;flex-shrink:0; }
+  .sidebar-foot .name{ font-size:0.8rem; font-weight:700; }
+  .sidebar-foot .role{ font-size:0.7rem; color:var(--muted); }
+
+  .main{ display:flex; flex-direction:column; min-width:0; }
+  .topbar{ background:#fff; border-bottom:1px solid var(--line); padding:16px 28px; display:flex; align-items:center; gap:16px; }
+  .topbar h1{ font-size:1.1rem; font-weight:800; }
+  .topbar .sub{ font-size:0.78rem; color:var(--muted); margin-top:2px; }
+  .content{ padding:24px 28px; }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .kpi-label{ font-size:0.76rem; color:var(--muted); font-weight:600; margin-bottom:6px; }
+  .kpi-value{ font-size:1.35rem; font-weight:800; }
+
+  .status-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+  .status-tab{ padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:#fff; font-size:0.82rem; font-weight:600; color:var(--muted); cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .status-tab .count{ background:var(--bg); color:var(--muted); font-size:0.68rem; font-weight:700; padding:1px 6px; border-radius:10px; }
+  .status-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .status-tab.active .count{ background:rgba(255,255,255,0.2); color:#fff; }
+
+  .table-toolbar{ background:var(--card); border:1px solid var(--line); border-radius:14px 14px 0 0; padding:14px 18px; display:flex; align-items:center; gap:12px; border-bottom:none; }
+  .search-box{ display:flex; align-items:center; gap:8px; background:var(--bg); border-radius:9px; padding:9px 12px; flex:1; max-width:320px; }
+  .search-box input{ border:none;background:none;outline:none;font-size:0.83rem;width:100%; }
+  .search-box svg{ color:var(--muted); flex-shrink:0; }
+  .filter-btn{ display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:9px; border:1px solid var(--line); background:#fff; font-size:0.82rem; font-weight:600; color:var(--ink); cursor:pointer; }
+  select.filter-btn{ appearance:none; }
+
+  .table-panel{ background:var(--card); border:1px solid var(--line); border-top:none; border-radius:0 0 14px 14px; overflow:hidden; }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ text-align:left; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); padding:12px 10px; border-bottom:1px solid var(--line); background:#fafafa; white-space:nowrap; }
+  tbody td{ padding:12px 10px; font-size:0.85rem; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tbody tr{ cursor:pointer; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:#fbfbfb; }
+  .order-id{ font-weight:700; color:var(--maroon); }
+  .customer-cell .name{ font-weight:600; }
+  .customer-cell .contact{ font-size:0.72rem; color:var(--muted); }
+  .status-pill{ font-size:0.7rem; font-weight:700; padding:4px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; }
+  .status-pill::before{ content:''; width:6px;height:6px;border-radius:50%; }
+  .st-pending{ background:var(--warn-bg); color:var(--warn); } .st-pending::before{ background:var(--warn); }
+  .st-confirmed{ background:var(--draft-bg); color:var(--draft); } .st-confirmed::before{ background:var(--draft); }
+  .st-shipped{ background:#eef2ff; color:#4338ca; } .st-shipped::before{ background:#4338ca; }
+  .st-delivered{ background:var(--success-bg); color:var(--success); } .st-delivered::before{ background:var(--success); }
+  .st-cancelled{ background:var(--danger-bg); color:var(--danger); } .st-cancelled::before{ background:var(--danger); }
+  .items-count{ color:var(--muted); }
+  .pagination{ display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-top:1px solid var(--line); }
+  .pagination .info{ font-size:0.8rem; color:var(--muted); }
+  .page-btns{ display:flex; gap:6px; }
+  .page-btn{ width:30px;height:30px; border-radius:7px; border:1px solid var(--line); background:#fff; font-size:0.8rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .page-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  @media (max-width:1000px){
+    .shell{ grid-template-columns:1fr; } .sidebar{ display:none; }
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .table-panel{ overflow-x:auto; } table{ min-width:760px; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+  <div id="adminSidebarRoot"></div>
+
+
+  <div class="main">
+    <div class="topbar">
+      <div><h1>Orders</h1><div id="ordersTopSub" class="sub">Loading orders...</div></div>
+    </div>
+    <div class="content">
+
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Pending</div><div class="kpi-value" id="pendingValue" style="color:var(--warn)">0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Confirmed</div><div class="kpi-value" id="confirmedValue" style="color:var(--draft)">0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Shipped</div><div class="kpi-value" id="shippedValue" style="color:#4338ca">0</div></div>
+        <div class="kpi-card"><div class="kpi-label">Delivered (30d)</div><div class="kpi-value" id="deliveredValue" style="color:var(--success)">0</div></div>
+      </div>
+      <div id="ordersInfo" class="sub" style="margin-bottom:12px; color:var(--muted);">Showing 0 of 0</div>
+
+      <div class="status-tabs">
+        <div class="status-tab active" data-f="all">All <span class="count">312</span></div>
+        <div class="status-tab" data-f="pending">Pending <span class="count">6</span></div>
+        <div class="status-tab" data-f="confirmed">Confirmed <span class="count">9</span></div>
+        <div class="status-tab" data-f="shipped">Shipped <span class="count">14</span></div>
+        <div class="status-tab" data-f="delivered">Delivered <span class="count">283</span></div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="ordersSearchInput" type="text" placeholder="Search order ID or customer...">
+        </div>
+        <select id="paymentMethodFilter" class="filter-btn">
+          <option value="all">All Payment Methods</option>
+          <option value="Card / Transfer">Card / Transfer</option>
+          <option value="Pay on Delivery">Pay on Delivery</option>
+        </select>
+        <button class="filter-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 3 5-8"/></svg>Sort</button>
+      </div>
+
+      <div class="table-panel">
+        <table>
+          <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="pagination">
+          <span class="info" id="ordersTotalCount">0 total orders</span>
+          <div class="page-btns"><button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">›</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { renderAdminNav } from "../lib/admin-nav.js";
+  import { requireAdmin } from "./js/admin-auth.js";
+  import { initAdminOrders } from "./js/admin-orders.js";
+
+  renderAdminNav("orders");
+  requireAdmin(() => initAdminOrders());
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE — Order Confirmed</title>
+<style>
+  :root{
+    --maroon:#680202; --ink:#1a1a1a; --muted:#767676; --line:#ececec; --bg:#ffffff; --success:#2e7d4f; --success-bg:#eaf6ef;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f7f7f7; }
+  .app{ max-width:520px; margin:0 auto; background:var(--bg); min-height:100vh; display:flex; flex-direction:column; }
+
+  .confirm-hero{
+    padding:56px 24px 28px;
+    text-align:center;
+    background:linear-gradient(180deg, var(--success-bg) 0%, #fff 100%);
+  }
+  .check-circle{
+    width:74px;height:74px; border-radius:50%; background:var(--success); margin:0 auto 20px;
+    display:flex; align-items:center; justify-content:center;
+    animation:pop .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop{ from{ transform:scale(0); } to{ transform:scale(1); } }
+  .confirm-hero h1{ font-size:1.3rem; font-weight:800; color:var(--ink); margin-bottom:8px; }
+  .confirm-hero p{ font-size:0.88rem; color:var(--muted); line-height:1.5; max-width:320px; margin:0 auto; }
+
+  .order-ref{
+    margin:20px 24px 0;
+    background:#f7f7f7;
+    border-radius:12px;
+    padding:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .order-ref .label{ font-size:0.76rem; color:var(--muted); }
+  .order-ref .value{ font-size:0.95rem; font-weight:800; color:var(--ink); margin-top:2px; }
+  .copy-btn{ background:#fff; border:1px solid var(--line); border-radius:8px; padding:7px 12px; font-size:0.76rem; font-weight:700; color:var(--maroon); cursor:pointer; }
+
+  .section{ padding:20px 24px; border-bottom:8px solid #f7f7f7; }
+  .section h3{ font-size:0.86rem; font-weight:700; margin-bottom:12px; }
+
+  .order-item{ display:flex; gap:12px; padding:10px 0; }
+  .order-item img{ width:52px;height:64px; border-radius:8px; object-fit:cover; background:#f0ece7; flex-shrink:0; }
+  .oi-title{ font-size:0.85rem; font-weight:600; }
+  .oi-meta{ font-size:0.74rem; color:var(--muted); margin-top:2px; }
+  .oi-price{ font-size:0.85rem; font-weight:700; margin-left:auto; }
+
+  .info-row{ display:flex; justify-content:space-between; padding:8px 0; font-size:0.84rem; }
+  .info-row .k{ color:var(--muted); }
+  .info-row .v{ font-weight:600; text-align:right; }
+  .info-row.total{ border-top:1px solid var(--line); margin-top:6px; padding-top:12px; font-weight:800; font-size:0.95rem; }
+
+  .timeline-mini{ display:flex; align-items:center; gap:6px; margin-top:4px; }
+  .tl-dot{ width:8px;height:8px;border-radius:50%; background:var(--success); }
+  .tl-dot.pending{ background:var(--line); }
+  .tl-line-mini{ flex:1; height:2px; background:var(--success); }
+  .tl-line-mini.pending{ background:var(--line); }
+
+  .actions{ padding:20px 24px 40px; display:flex; flex-direction:column; gap:10px; }
+  .btn{ width:100%; padding:15px; border-radius:12px; font-size:0.9rem; font-weight:700; border:none; cursor:pointer; }
+  .btn-primary{ background:var(--maroon); color:#fff; }
+  .btn-ghost{ background:#fff; border:1.5px solid var(--line); color:var(--ink); }
+
+  @media (min-width:768px){
+    .app{ max-width:600px; margin:32px auto; border-radius:20px; box-shadow:0 20px 60px -20px rgba(0,0,0,0.15); overflow:hidden; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="confirm-hero">
+    <div class="check-circle">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h1>Order Placed!</h1>
+    <p>Thanks for shopping with AKUBASE. We'll notify you as soon as your item is on its way.</p>
+  </div>
+
+  <div class="order-ref">
+    <div>
+      <div class="label">Order Reference</div>
+      <div class="value" id="orderRef">—</div>
+    </div>
+    <button class="copy-btn" id="copyBtn">Copy</button>
+  </div>
+
+  <div class="section">
+    <h3>Order Status</h3>
+    <div class="timeline-mini" id="timelineMini">
+      <div class="tl-dot"></div>
+      <div class="tl-line-mini"></div>
+      <div class="tl-dot pending"></div>
+      <div class="tl-line-mini pending"></div>
+      <div class="tl-dot pending"></div>
+      <div class="tl-line-mini pending"></div>
+      <div class="tl-dot pending"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--muted); margin-top:6px;">
+      <span>Placed</span><span>Confirmed</span><span>Shipped</span><span>Delivered</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3 id="itemsHeading">Items</h3>
+    <div id="orderItemsList"></div>
+  </div>
+
+  <div class="section">
+    <h3>Delivery & Payment</h3>
+    <div class="info-row"><span class="k">Delivery to</span><span class="v" id="deliveryToVal">—</span></div>
+    <div class="info-row"><span class="k">Method</span><span class="v" id="methodVal">—</span></div>
+    <div class="info-row"><span class="k">Payment</span><span class="v" id="paymentVal">—</span></div>
+    <div class="info-row total"><span class="k" id="totalLabel">Total</span><span class="v" id="totalVal">₦0</span></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="trackBtn">Track This Order</button>
+    <button class="btn btn-ghost" onclick="window.location.href='/products.html'">Continue Shopping</button>
+  </div>
+
+</div>
+<script type="module">
+import { getOrderById } from "./js/orders.js";
+
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("id");
+
+const STATUS_STEPS = ["pending", "confirmed", "shipped", "delivered"];
+
+if (!orderId) {
+  document.querySelector(".app").innerHTML =
+    '<div style="padding:60px 24px; text-align:center;"><p style="color:#767676;">No order specified.</p></div>';
+} else {
+  loadOrder();
+}
+
+async function loadOrder() {
+  const order = await getOrderById(orderId);
+  if (!order) {
+    document.querySelector(".app").innerHTML =
+      '<div style="padding:60px 24px; text-align:center;"><p style="color:#767676;">This order could not be found.</p></div>';
+    return;
+  }
+
+  document.getElementById("orderRef").textContent = "#" + orderId.slice(0, 8).toUpperCase();
+  document.getElementById("itemsHeading").textContent = `Items · ${(order.items || []).length}`;
+
+  document.getElementById("orderItemsList").innerHTML = (order.items || []).map(item => `
+    <div class="order-item">
+      <img src="${item.image || `https://placehold.co/100x125/680202/ffffff?text=Item`}" alt="">
+      <div><div class="oi-title">${item.title || ''}</div><div class="oi-meta">${item.brand || ''} · Size ${item.size || '—'}</div></div>
+      <div class="oi-price">₦${Number(item.price || 0).toLocaleString()}</div>
+    </div>
+  `).join("");
+
+  const addr = order.deliveryAddress || {};
+  document.getElementById("deliveryToVal").textContent = addr.address || "—";
+  document.getElementById("methodVal").textContent = order.deliveryMethod || "—";
+  document.getElementById("paymentVal").textContent = order.paymentMethod || "—";
+  document.getElementById("totalLabel").textContent =
+    order.paymentStatus === "paid" ? "Total Paid" : "Total Due";
+  document.getElementById("totalVal").textContent = "₦" + Number(order.total || 0).toLocaleString();
+
+  renderTimeline(order.status || "pending");
+
+  document.getElementById("trackBtn").addEventListener("click", () => {
+    window.location.href = "/orders.html";
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    navigator.clipboard?.writeText(document.getElementById("orderRef").textContent);
+    this.textContent = "Copied";
+    setTimeout(() => (this.textContent = "Copy"), 1500);
+  });
+}
+
+function renderTimeline(status) {
+  const currentIndex = STATUS_STEPS.indexOf(status);
+  const wrap = document.getElementById("timelineMini");
+  const dots = wrap.querySelectorAll(".tl-dot");
+  const lines = wrap.querySelectorAll(".tl-line-mini");
+
+  dots.forEach((dot, i) => dot.classList.toggle("pending", i > currentIndex));
+  lines.forEach((line, i) => line.classList.toggle("pending", i > currentIndex));
+}
+</script>
+</body>
+</html>

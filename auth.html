@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE — Sign In</title>
+<style>
+  :root{ --maroon:#680202; --maroon-deep:#4a0101; --ink:#1a1a1a; --muted:#767676; --line:#ececec; --bg:#ffffff; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; }
+  .app{ max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:0 28px; }
+
+  .brand-header{ padding:56px 0 8px; text-align:center; }
+  .brand-header h1{ font-size:1.6rem; font-weight:800; color:var(--maroon); }
+  .brand-header p{ font-size:0.85rem; color:var(--muted); margin-top:6px; }
+
+  .tabs{ display:flex; background:#f3f3f3; border-radius:12px; padding:4px; margin:28px 0 24px; }
+  .tab{ flex:1; text-align:center; padding:10px; border-radius:9px; font-size:0.87rem; font-weight:700; color:var(--muted); cursor:pointer; }
+  .tab.active{ background:#fff; color:var(--maroon); box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+
+  .form{ display:flex; flex-direction:column; gap:14px; }
+  .form.hidden{ display:none; }
+  .field label{ display:block; font-size:0.8rem; font-weight:600; margin-bottom:7px; }
+  .field input{ width:100%; border:1.5px solid var(--line); border-radius:10px; padding:13px 14px; font-size:0.9rem; outline:none; }
+  .field input:focus{ border-color:var(--maroon); }
+  .field-pass{ position:relative; }
+  .field-pass button{ position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--muted); cursor:pointer; }
+
+  .forgot{ text-align:right; font-size:0.78rem; color:var(--maroon); font-weight:600; cursor:pointer; margin-top:-6px; }
+
+  .submit-btn{ width:100%; background:var(--maroon); color:#fff; border:none; padding:15px; border-radius:12px; font-size:0.92rem; font-weight:700; cursor:pointer; margin-top:6px; }
+
+  .divider{ display:flex; align-items:center; gap:12px; margin:22px 0; color:var(--muted); font-size:0.78rem; }
+  .divider::before, .divider::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+  .social-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:13px; border-radius:12px; border:1.5px solid var(--line); background:#fff; font-size:0.87rem; font-weight:700; color:var(--ink); cursor:pointer; margin-bottom:10px; }
+
+  .terms{ font-size:0.74rem; color:var(--muted); text-align:center; line-height:1.5; margin-top:20px; }
+  .terms a{ color:var(--maroon); font-weight:600; text-decoration:none; }
+  .error-msg{ color:#b3261e; font-size:0.8rem; font-weight:600; margin-top:-4px; }
+  .submit-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+
+  .skip{ text-align:center; margin-top:auto; padding:24px 0; font-size:0.82rem; color:var(--muted); }
+  .skip a{ color:var(--maroon); font-weight:700; text-decoration:none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="brand-header">
+    <h1>AKUBASE</h1>
+    <p>Sign in to track orders, save items, and check out faster</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="login">Log In</div>
+    <div class="tab" data-tab="signup">Sign Up</div>
+  </div>
+
+  <!-- ===== LOGIN ===== -->
+  <form class="form" id="loginForm">
+    <div class="field">
+      <label>Email or Phone Number</label>
+      <input type="text" id="loginEmail" placeholder="you@email.com">
+    </div>
+    <div class="field field-pass">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••">
+      <button type="button" class="toggle-pass" data-target="loginPass">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <div class="forgot">Forgot password?</div>
+    <p class="error-msg" id="loginError" style="display:none;"></p>
+    <button type="button" class="submit-btn" id="loginSubmit">Log In</button>
+  </form>
+
+  <!-- ===== SIGNUP ===== -->
+  <form class="form hidden" id="signupForm">
+    <div class="field">
+      <label>Full Name</label>
+      <input type="text" id="signupName" placeholder="Your name">
+    </div>
+    <div class="field">
+      <label>Email or Phone Number</label>
+      <input type="text" id="signupEmail" placeholder="you@email.com">
+    </div>
+    <div class="field field-pass">
+      <label>Password</label>
+      <input type="password" id="signupPass" placeholder="At least 8 characters">
+      <button type="button" class="toggle-pass" data-target="signupPass">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <p class="error-msg" id="signupError" style="display:none;"></p>
+    <button type="button" class="submit-btn" id="signupSubmit">Create Account</button>
+  </form>
+
+  <div class="divider">or continue with</div>
+  <button class="social-btn" id="googleBtn">
+    <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.19 3.32v2.77h3.55c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.55-2.77c-.98.66-2.23 1.06-3.73 1.06-2.87 0-5.3-1.94-6.17-4.53H2.18v2.85A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.83 14.09A6.6 6.6 0 015.48 12c0-.73.13-1.43.35-2.09V7.06H2.18A11 11 0 001 12c0 1.77.42 3.45 1.18 4.94l3.65-2.85z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 00-9.82 6.06l3.65 2.85C6.7 7.32 9.13 5.38 12 5.38z"/></svg>
+    Continue with Google
+  </button>
+
+  <p class="terms">By continuing, you agree to AKUBASE's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+
+  <div class="skip"><a href="#" id="guestLink">Continue as guest →</a></div>
+
+</div>
+<script type="module">
+import { signInWithGoogle, signInWithEmail, signUpWithEmail } from "./js/auth.js";
+
+const tabs = document.querySelectorAll(".tab");
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
+
+tabs.forEach(tab => {
+  tab.addEventListener("click", function () {
+    tabs.forEach(t => t.classList.remove("active"));
+    this.classList.add("active");
+    const isLogin = this.dataset.tab === "login";
+    loginForm.classList.toggle("hidden", !isLogin);
+    signupForm.classList.toggle("hidden", isLogin);
+  });
+});
+
+document.querySelectorAll(".toggle-pass").forEach(btn => {
+  btn.addEventListener("click", function () {
+    const input = document.getElementById(this.dataset.target);
+    input.type = input.type === "password" ? "text" : "password";
+  });
+});
+
+// Where to send the user after a successful sign-in. Cart/Checkout
+// buttons link here with ?redirect=/checkout.html (see auth.js
+// attachAuthModalTriggers) — falls back to the shop if none is set.
+const params = new URLSearchParams(window.location.search);
+const redirectTo = params.get("redirect") || "/products.html";
+
+function showError(el, message) {
+  el.textContent = message;
+  el.style.display = "block";
+}
+function clearError(el) {
+  el.style.display = "none";
+}
+
+document.getElementById("loginSubmit").addEventListener("click", async function () {
+  const errorEl = document.getElementById("loginError");
+  clearError(errorEl);
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPass").value;
+
+  if (!email || !password) {
+    showError(errorEl, "Please enter both email and password.");
+    return;
+  }
+
+  this.disabled = true;
+  this.textContent = "Logging in…";
+  try {
+    await signInWithEmail(email, password);
+    window.location.href = redirectTo;
+  } catch (err) {
+    showError(errorEl, friendlyAuthError(err));
+    this.disabled = false;
+    this.textContent = "Log In";
+  }
+});
+
+document.getElementById("signupSubmit").addEventListener("click", async function () {
+  const errorEl = document.getElementById("signupError");
+  clearError(errorEl);
+  const name = document.getElementById("signupName").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPass").value;
+
+  if (!name || !email || !password) {
+    showError(errorEl, "Please fill in all fields.");
+    return;
+  }
+  if (password.length < 8) {
+    showError(errorEl, "Password must be at least 8 characters.");
+    return;
+  }
+
+  this.disabled = true;
+  this.textContent = "Creating account…";
+  try {
+    await signUpWithEmail(name, email, password);
+    window.location.href = redirectTo;
+  } catch (err) {
+    showError(errorEl, friendlyAuthError(err));
+    this.disabled = false;
+    this.textContent = "Create Account";
+  }
+});
+
+document.getElementById("googleBtn").addEventListener("click", async function () {
+  this.disabled = true;
+  try {
+    await signInWithGoogle();
+    window.location.href = redirectTo;
+  } catch (err) {
+    // User closed the popup or it failed — just re-enable, no need
+    // to show a scary error for a simple dismissal.
+    this.disabled = false;
+    console.warn("Google sign-in cancelled or failed:", err.message);
+  }
+});
+
+document.getElementById("guestLink").addEventListener("click", (e) => {
+  e.preventDefault();
+  // Guest checkout still needs a Firebase Auth session so orders/cart
+  // have a userId to attach to — see the anonymous-auth note in the
+  // build proposal. For now this just proceeds without forcing signup.
+  window.location.href = redirectTo;
+});
+
+function friendlyAuthError(err) {
+  const code = err.code || "";
+  if (code.includes("user-not-found") || code.includes("wrong-password") || code.includes("invalid-credential")) {
+    return "Incorrect email or password.";
+  }
+  if (code.includes("email-already-in-use")) {
+    return "An account already exists with this email — try logging in instead.";
+  }
+  if (code.includes("weak-password")) {
+    return "Password is too weak — try at least 8 characters.";
+  }
+  if (code.includes("invalid-email")) {
+    return "That email address doesn't look right.";
+  }
+  return "Something went wrong — please try again.";
+}
+</script>
+</body>
+</html>

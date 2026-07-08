@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE — Search</title>
+<style>
+  :root{
+    --maroon:#680202; --ink:#1a1a1a; --muted:#767676; --line:#ececec; --bg:#ffffff; --success:#2e7d4f;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f7f7f7; }
+  .app{ max-width:520px; margin:0 auto; background:var(--bg); min-height:100vh; padding-bottom:80px; }
+
+  .topbar{ position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--line); padding:14px 18px; display:flex; align-items:center; gap:10px; }
+  .back-btn{ background:none;border:none;cursor:pointer; display:flex; align-items:center; flex-shrink:0; }
+  .search-box{ flex:1; display:flex; align-items:center; gap:8px; background:#f3f3f3; border-radius:10px; padding:10px 12px; }
+  .search-box input{ border:none;background:none;outline:none;font-size:0.87rem;width:100%; }
+  .search-box svg{ color:var(--muted); flex-shrink:0; }
+  .clear-btn{ background:none; border:none; color:var(--muted); cursor:pointer; display:none; }
+  .clear-btn.show{ display:block; }
+
+  .recent{ padding:16px 18px 4px; }
+  .recent h4{ font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); margin-bottom:10px; }
+  .recent-chip{ display:inline-flex; align-items:center; gap:6px; padding:8px 13px; border-radius:20px; background:#f3f3f3; font-size:0.82rem; font-weight:600; color:var(--ink); margin:0 6px 8px 0; cursor:pointer; }
+
+  .result-count{ padding:14px 18px 4px; font-size:0.8rem; color:var(--muted); font-weight:500; }
+  .grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px 12px; padding:12px 18px; }
+  .card{ cursor:pointer; }
+  .card-image{ position:relative; width:100%; aspect-ratio:4/5; border-radius:12px; overflow:hidden; background:#f0ece7; }
+  .card-image img{ width:100%;height:100%;object-fit:cover; }
+  .card-condition{ position:absolute; top:8px;left:8px; background:rgba(255,255,255,0.92); color:var(--success); font-size:0.62rem; font-weight:700; padding:3px 8px; border-radius:12px; }
+  .card-body{ padding-top:9px; }
+  .card-brand{ font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--maroon); }
+  .card-title{ font-size:0.82rem; font-weight:600; color:var(--ink); line-height:1.3; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-price-row{ display:flex; align-items:baseline; gap:6px; margin-top:5px; }
+  .card-price{ font-size:0.85rem; font-weight:800; color:var(--ink); }
+  .card-price-original{ font-size:0.68rem; color:var(--muted); text-decoration:line-through; }
+
+  .no-results{ display:none; flex-direction:column; align-items:center; text-align:center; padding:70px 40px; }
+  .no-results.show{ display:flex; }
+  .no-results svg{ color:var(--line); margin-bottom:16px; }
+  .no-results h3{ font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .no-results p{ font-size:0.85rem; color:var(--muted); line-height:1.5; }
+
+  @media (min-width:768px){
+    .app{ max-width:900px; padding-bottom:24px; }
+    .grid{ grid-template-columns:repeat(4,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <button class="back-btn" onclick="window.location.href='/products.html'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="search-box">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search brand, item, category..." autofocus>
+    </div>
+    <button class="clear-btn" id="clearBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="recent" id="recentBlock">
+    <h4>Recent Searches</h4>
+    <div id="recentChips"></div>
+  </div>
+
+  <div class="result-count" id="resultCount" style="display:none;"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="no-results" id="noResults">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <h3>No results found</h3>
+    <p>Try a different brand, item name, or category — or check back later, new pieces get listed often.</p>
+  </div>
+
+  <div id="bottomNavRoot"></div>
+
+</div>
+<script type="module">
+import { searchProductsClientSide } from "./js/products.js";
+import { readList, writeList } from "./js/storage.js";
+import { renderBottomNav } from "./js/bottom-nav.js";
+
+renderBottomNav("search");
+
+const RECENT_KEY = "recentSearches";
+const MAX_RECENT = 5;
+
+const input = document.getElementById("searchInput");
+const clearBtn = document.getElementById("clearBtn");
+const recentBlock = document.getElementById("recentBlock");
+const recentChips = document.getElementById("recentChips");
+const resultCount = document.getElementById("resultCount");
+const grid = document.getElementById("grid");
+const noResults = document.getElementById("noResults");
+
+let debounceTimer = null;
+
+function renderRecentChips() {
+  const recent = readList(RECENT_KEY);
+  recentChips.innerHTML = recent.map(term =>
+    `<span class="recent-chip" data-term="${term}">${term}</span>`
+  ).join("");
+}
+
+function saveRecentSearch(term) {
+  let recent = readList(RECENT_KEY);
+  recent = recent.filter(t => t.toLowerCase() !== term.toLowerCase());
+  recent.unshift(term);
+  if (recent.length > MAX_RECENT) recent = recent.slice(0, MAX_RECENT);
+  writeList(RECENT_KEY, recent);
+}
+
+async function runSearch(query) {
+  const q = query.trim();
+  recentBlock.style.display = q ? "none" : "block";
+
+  if (!q) {
+    resultCount.style.display = "none";
+    grid.style.display = "none";
+    noResults.classList.remove("show");
+    return;
+  }
+
+  const results = await searchProductsClientSide(q);
+
+  resultCount.style.display = "block";
+  resultCount.textContent = `${results.length} result${results.length !== 1 ? "s" : ""} for "${query}"`;
+
+  if (results.length === 0) {
+    grid.style.display = "none";
+    noResults.classList.add("show");
+  } else {
+    noResults.classList.remove("show");
+    grid.style.display = "grid";
+    grid.innerHTML = results.map(p => `
+      <div class="card" data-id="${p.id}">
+        <div class="card-image">
+          <img src="${(p.images && p.images[0]) || `https://placehold.co/300x375/680202/ffffff?text=${encodeURIComponent(p.brand || 'Item')}`}">
+          <div class="card-condition">${p.condition || ''}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-brand">${p.brand || ''}</div>
+          <div class="card-title">${p.title || ''}</div>
+          <div class="card-price-row">
+            <span class="card-price">₦${Number(p.price || 0).toLocaleString()}</span>
+            ${p.originalPrice ? `<span class="card-price-original">₦${Number(p.originalPrice).toLocaleString()}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+input.addEventListener("input", (e) => {
+  const value = e.target.value;
+  clearBtn.classList.toggle("show", !!value);
+
+  // Debounce so we're not hitting Firestore on every keystroke —
+  // client-side filter is cheap, but this still avoids re-rendering
+  // the grid dozens of times while someone is mid-type.
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    runSearch(value);
+    if (value.trim().length >= 2) saveRecentSearch(value.trim());
+  }, 400);
+});
+
+clearBtn.addEventListener("click", () => {
+  input.value = "";
+  clearBtn.classList.remove("show");
+  runSearch("");
+  input.focus();
+});
+
+recentChips.addEventListener("click", (e) => {
+  const chip = e.target.closest("[data-term]");
+  if (!chip) return;
+  input.value = chip.dataset.term;
+  clearBtn.classList.add("show");
+  runSearch(chip.dataset.term);
+});
+
+grid.addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if (card) window.location.href = `/product-details.html?id=${card.dataset.id}`;
+});
+
+renderRecentChips();
+runSearch("");
+</script>
+</body>
+</html>

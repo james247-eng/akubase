@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE — My Orders</title>
+<style>
+  :root{
+    --maroon:#680202; --ink:#1a1a1a; --muted:#767676; --line:#ececec; --bg:#ffffff;
+    --success:#2e7d4f; --success-bg:#eaf6ef; --warn:#b5750f; --warn-bg:#fdf3e3; --draft:#5b6b8c; --draft-bg:#eaeefd;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f7f7f7; }
+  .app{ max-width:520px; margin:0 auto; background:var(--bg); min-height:100vh; padding-bottom:80px; }
+
+  .topbar{ position:sticky; top:0; z-index:20; background:#fff; border-bottom:1px solid var(--line); padding:16px 18px; }
+  .topbar h1{ font-size:1.05rem; font-weight:700; }
+
+  .filter-tabs{ display:flex; gap:8px; padding:14px 18px 4px; overflow-x:auto; }
+  .filter-tab{ flex-shrink:0; padding:7px 14px; border-radius:20px; border:1.5px solid var(--line); font-size:0.8rem; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap; }
+  .filter-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .order-card{ margin:14px 18px 0; border:1px solid var(--line); border-radius:14px; padding:14px; }
+  .oc-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .oc-id{ font-size:0.85rem; font-weight:700; color:var(--ink); }
+  .oc-date{ font-size:0.72rem; color:var(--muted); margin-top:1px; }
+  .status-pill{ font-size:0.68rem; font-weight:700; padding:4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; }
+  .status-pill::before{ content:''; width:6px;height:6px;border-radius:50%; }
+  .st-pending{ background:var(--warn-bg); color:var(--warn); } .st-pending::before{ background:var(--warn); }
+  .st-shipped{ background:#eef2ff; color:#4338ca; } .st-shipped::before{ background:#4338ca; }
+  .st-delivered{ background:var(--success-bg); color:var(--success); } .st-delivered::before{ background:var(--success); }
+
+  .oc-items{ display:flex; gap:8px; margin-bottom:12px; }
+  .oc-items img{ width:48px;height:60px; border-radius:8px; object-fit:cover; background:#f0ece7; }
+  .oc-more{ width:48px;height:60px; border-radius:8px; background:#f7f7f7; display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:700; color:var(--muted); }
+
+  .oc-bottom{ display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid var(--line); }
+  .oc-total{ font-size:0.85rem; font-weight:700; }
+  .oc-total .lbl{ font-size:0.7rem; color:var(--muted); font-weight:500; display:block; }
+  .oc-action{ font-size:0.78rem; font-weight:700; color:var(--maroon); background:none; border:none; cursor:pointer; }
+
+  .signin-prompt{ text-align:center; padding:70px 30px; }
+  .signin-prompt p{ font-size:0.88rem; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+  .signin-prompt button{ background:var(--maroon); color:#fff; border:none; padding:12px 26px; border-radius:10px; font-size:0.85rem; font-weight:700; cursor:pointer; }
+
+  @media (min-width:768px){
+    .app{ padding-bottom:0; max-width:640px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar"><h1>My Orders</h1></div>
+
+  <div class="filter-tabs">
+    <div class="filter-tab active" data-f="all">All</div>
+    <div class="filter-tab" data-f="pending">Pending</div>
+    <div class="filter-tab" data-f="shipped">Shipped</div>
+    <div class="filter-tab" data-f="delivered">Delivered</div>
+  </div>
+
+  <div id="orderList"></div>
+
+  <div class="signin-prompt" id="signinPrompt" style="display:none;">
+    <p>Sign in to see your order history.</p>
+    <button onclick="window.location.href='/auth.html?redirect=/orders.html'">Sign In</button>
+  </div>
+
+  <div id="bottomNavRoot"></div>
+
+</div>
+<script type="module">
+import { getOrdersForUser } from "./js/orders.js";
+import { getCurrentUser } from "./js/auth.js";
+import { renderBottomNav } from "./js/bottom-nav.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { auth } from "./config/firebase-config.js";
+
+renderBottomNav("profile"); // My Orders lives under the Profile tab in the nav
+
+const statusLabel = { pending: "Pending", confirmed: "Confirmed", shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled" };
+const list = document.getElementById("orderList");
+const signinPrompt = document.getElementById("signinPrompt");
+
+let allOrders = [];
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    list.style.display = "none";
+    signinPrompt.style.display = "block";
+    return;
+  }
+  signinPrompt.style.display = "none";
+  list.style.display = "block";
+  allOrders = await getOrdersForUser(user.uid);
+  render("all");
+});
+
+function render(filter) {
+  const data = filter === "all" ? allOrders : allOrders.filter(o => o.status === filter);
+
+  list.innerHTML = data.map(o => `
+    <div class="order-card">
+      <div class="oc-top">
+        <div><div class="oc-id">#${o.id.slice(0, 8).toUpperCase()}</div><div class="oc-date">${formatDate(o.createdAt)}</div></div>
+        <span class="status-pill st-${o.status}">${statusLabel[o.status] || o.status}</span>
+      </div>
+      <div class="oc-items">
+        ${(o.items || []).slice(0, 3).map(item =>
+          `<img src="${item.image || `https://placehold.co/100x125/680202/ffffff?text=Item`}">`
+        ).join("")}
+        ${(o.items || []).length > 3 ? `<div class="oc-more">+${o.items.length - 3}</div>` : ""}
+      </div>
+      <div class="oc-bottom">
+        <div class="oc-total"><span class="lbl">Total</span>₦${Number(o.total || 0).toLocaleString()}</div>
+        <button class="oc-action" onclick="window.location.href='/order-confirmation.html?id=${o.id}'">
+          ${o.status === "delivered" ? "Buy Again" : "Track Order"}
+        </button>
+      </div>
+    </div>
+  `).join("") || '<p style="text-align:center;color:var(--muted);font-size:0.85rem;padding:60px 20px;">No orders in this category yet.</p>';
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "";
+  // Firestore Timestamp objects have a toDate() method
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" });
+}
+
+document.querySelectorAll(".filter-tab").forEach(tab => {
+  tab.addEventListener("click", function () {
+    document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+    this.classList.add("active");
+    render(this.dataset.f);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE — Bag</title>
+<style>
+  :root{
+    --maroon:#680202;
+    --maroon-deep:#4a0101;
+    --ink:#1a1a1a;
+    --muted:#767676;
+    --line:#ececec;
+    --bg:#ffffff;
+    --success:#2e7d4f;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:#f7f7f7;
+  }
+  .app{
+    max-width:520px;
+    margin:0 auto;
+    background:var(--bg);
+    min-height:100vh;
+    position:relative;
+    padding-bottom:80px; /* room for bottom nav */
+  }
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .topbar button{
+    background:none;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .topbar h1{ font-size:1.05rem; font-weight:700; color:var(--ink); }
+  .topbar .count{ font-size:0.8rem; color:var(--muted); font-weight:500; margin-left:auto; }
+
+  /* ============ CART ITEMS ============ */
+  .cart-list{ padding:8px 18px 0; }
+  .cart-item{
+    display:flex;
+    gap:12px;
+    padding:16px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .cart-item img{
+    width:78px;height:96px;
+    border-radius:10px;
+    object-fit:cover;
+    flex-shrink:0;
+    background:#f0ece7;
+  }
+  .cart-item-body{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+  .ci-top{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .ci-brand{
+    font-size:0.68rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--maroon);
+  }
+  .ci-title{
+    font-size:0.88rem;
+    font-weight:600;
+    color:var(--ink);
+    line-height:1.3;
+    margin-top:2px;
+  }
+  .ci-remove{
+    background:none;border:none;cursor:pointer;
+    color:var(--muted);
+    flex-shrink:0;
+    padding:2px;
+  }
+  .ci-meta{
+    font-size:0.76rem;
+    color:var(--muted);
+    margin-top:6px;
+  }
+  .ci-condition{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    color:var(--success);
+    font-weight:600;
+  }
+  .ci-condition::before{
+    content:'';
+    width:5px;height:5px;
+    border-radius:50%;
+    background:var(--success);
+  }
+  .ci-bottom{
+    margin-top:auto;
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    padding-top:8px;
+  }
+  .ci-price{ font-size:0.95rem; font-weight:800; color:var(--ink); }
+  .ci-original{
+    font-size:0.72rem;
+    color:var(--muted);
+    text-decoration:line-through;
+  }
+  .ci-onlyone{
+    font-size:0.68rem;
+    color:var(--maroon);
+    font-weight:700;
+    margin-left:auto;
+  }
+
+  /* ============ SAVE FOR LATER LINK ============ */
+  .save-later{
+    background:none;border:none;
+    font-size:0.75rem;
+    color:var(--muted);
+    text-decoration:underline;
+    margin-top:6px;
+    cursor:pointer;
+    align-self:flex-start;
+  }
+
+  /* ============ PROMO ============ */
+  .promo{
+    margin:18px 18px 0;
+    display:flex;
+    gap:8px;
+  }
+  .promo input{
+    flex:1;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:0.85rem;
+    outline:none;
+  }
+  .promo input:focus{ border-color:var(--maroon); }
+  .promo button{
+    padding:12px 18px;
+    border-radius:10px;
+    border:1.5px solid var(--ink);
+    background:#fff;
+    font-size:0.82rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  /* ============ SUMMARY ============ */
+  .summary{
+    margin:20px 18px 0;
+    padding:16px;
+    background:#f7f7f7;
+    border-radius:14px;
+  }
+  .summary-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.85rem;
+    color:var(--muted);
+    padding:6px 0;
+  }
+  .summary-row.total{
+    color:var(--ink);
+    font-weight:800;
+    font-size:1rem;
+    border-top:1px solid var(--line);
+    margin-top:6px;
+    padding-top:12px;
+  }
+  .summary-row span:last-child{ font-weight:600; color:var(--ink); }
+  .summary-row.total span:last-child{ font-weight:800; }
+  .summary-note{
+    font-size:0.72rem;
+    color:var(--muted);
+    margin-top:8px;
+    line-height:1.5;
+  }
+
+  /* ============ CTA ============ */
+  .checkout-cta{
+    margin:20px 18px 0;
+  }
+  .checkout-btn{
+    width:100%;
+    background:var(--maroon);
+    color:#fff;
+    border:none;
+    padding:16px;
+    border-radius:12px;
+    font-size:0.95rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  /* ============ EMPTY STATE ============ */
+  .empty{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:80px 40px;
+  }
+  .empty.show{ display:flex; }
+  .empty svg{ color:var(--line); margin-bottom:16px; }
+  .empty h3{ font-size:1rem; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .empty p{ font-size:0.85rem; color:var(--muted); margin-bottom:20px; }
+  .empty button{
+    background:var(--maroon);
+    color:#fff;
+    border:none;
+    padding:12px 28px;
+    border-radius:10px;
+    font-size:0.85rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  @media (min-width: 768px){
+    .app{ padding-bottom:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <button aria-label="Back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h1>My Bag</h1>
+    <span class="count" id="itemCount">2 items</span>
+  </div>
+
+  <div class="cart-list" id="cartList"></div>
+
+  <div class="empty" id="emptyState">
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    <h3>Your bag is empty</h3>
+    <p>Items you add will show up here. Since everything's one-of-one, don't wait too long.</p>
+    <button onclick="window.location.href='/products.html'">Start Shopping</button>
+  </div>
+
+  <div class="promo" id="promoBlock">
+    <input type="text" placeholder="Promo code">
+    <button>Apply</button>
+  </div>
+
+  <div class="summary" id="summaryBlock">
+    <div class="summary-row"><span>Subtotal</span><span id="subtotalAmount">₦0</span></div>
+    <div class="summary-row"><span>Delivery</span><span id="deliveryAmount">₦2,000</span></div>
+    <div class="summary-row total"><span>Total</span><span id="totalAmount">₦0</span></div>
+    <p class="summary-note">Since each item is one of one, availability isn't guaranteed until checkout is complete.</p>
+  </div>
+
+  <div class="checkout-cta" id="ctaBlock">
+    <button class="checkout-btn requires-auth">Proceed to Checkout</button>
+  </div>
+
+  <!-- ===== BOTTOM NAV (rendered by js/bottom-nav.js) ===== -->
+  <div id="bottomNavRoot"></div>
+
+</div>
+
+<script type="module">
+import { getCart, getCartLines, removeFromCart, saveUserCart, validateCartAgainstLiveStock } from "./js/cart.js";
+import { auth } from "./config/firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getProductById } from "./js/products.js";
+import { attachAuthModalTriggers } from "./js/auth.js";
+import { renderBottomNav } from "./js/bottom-nav.js";
+
+renderBottomNav("cart");
+
+const listEl = document.getElementById("cartList");
+const emptyState = document.getElementById("emptyState");
+const promoBlock = document.getElementById("promoBlock");
+const summaryBlock = document.getElementById("summaryBlock");
+const ctaBlock = document.getElementById("ctaBlock");
+const itemCount = document.getElementById("itemCount");
+
+const DELIVERY_FEE = 2000; // mirrors Settings > Delivery Fees — swap for a live Firestore read later
+
+let cartProducts = []; // resolved { ...productData, size } for each cart line
+let currentUser = null;
+
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  loadCart();
+});
+
+async function loadCart() {
+  const localCart = getCart();
+  const { lines: cartLines, source } = await getCartLines(currentUser?.uid);
+
+  const { valid, removed } = await validateCartAgainstLiveStock(
+    getProductById,
+    source === "firestore" ? cartLines : null,
+    source === "firestore" ? async validLines => await saveUserCart(currentUser.uid, validLines) : null
+  );
+
+  if (removed.length > 0) {
+    console.info(`${removed.length} item(s) removed — no longer available.`);
+  }
+
+  if (currentUser && source === "local" && localCart.length > 0) {
+    await saveUserCart(currentUser.uid, valid);
+  }
+
+  cartProducts = [];
+  for (const line of valid) {
+    const product = await getProductById(line.productId);
+    if (product) cartProducts.push({ ...product, size: line.size, productId: line.productId });
+  }
+
+  render();
+}
+
+function render() {
+  const n = cartProducts.length;
+  itemCount.textContent = n + (n === 1 ? " item" : " items");
+
+  const isEmpty = n === 0;
+  emptyState.classList.toggle("show", isEmpty);
+  listEl.style.display = isEmpty ? "none" : "block";
+  promoBlock.style.display = isEmpty ? "none" : "flex";
+  summaryBlock.style.display = isEmpty ? "none" : "block";
+  ctaBlock.style.display = isEmpty ? "none" : "block";
+
+  listEl.innerHTML = cartProducts.map(p => `
+    <div class="cart-item" data-id="${p.productId}">
+      <img src="${(p.images && p.images[0]) || ''}" alt="${p.title || ''}">
+      <div class="cart-item-body">
+        <div class="ci-top">
+          <div>
+            <div class="ci-brand">${p.brand || ''}</div>
+            <div class="ci-title">${p.title || ''}</div>
+          </div>
+          <button class="ci-remove" data-remove="${p.productId}" aria-label="Remove">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="ci-meta">Size ${p.size || '—'} · <span class="ci-condition">${p.condition || ''}</span></div>
+        <div class="ci-bottom">
+          <span class="ci-price">₦${Number(p.price || 0).toLocaleString()}</span>
+          ${p.originalPrice ? `<span class="ci-original">₦${Number(p.originalPrice).toLocaleString()}</span>` : ''}
+          <span class="ci-onlyone">Only 1 left</span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  updateSummary();
+}
+
+function updateSummary() {
+  const subtotal = cartProducts.reduce((sum, p) => sum + Number(p.price || 0), 0);
+  const total = subtotal + (subtotal > 0 ? DELIVERY_FEE : 0);
+  document.getElementById("subtotalAmount").textContent = "₦" + subtotal.toLocaleString();
+  document.getElementById("deliveryAmount").textContent = "₦" + (subtotal > 0 ? DELIVERY_FEE.toLocaleString() : "0");
+  document.getElementById("totalAmount").textContent = "₦" + total.toLocaleString();
+}
+
+listEl.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-remove]");
+  if (!btn) return;
+  removeFromCart(btn.dataset.remove);
+  cartProducts = cartProducts.filter(p => p.productId !== btn.dataset.remove);
+  render();
+});
+
+// Checkout button is auth-gated — attachAuthModalTriggers handles
+// the Google popup-first flow and only redirects to full auth.html
+// if the user dismisses it.
+attachAuthModalTriggers(".requires-auth", () => {
+  window.location.href = "/checkout.html";
+});
+
+loadCart();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE Admin — Products</title>
+<style>
+  :root{
+    --maroon:#680202;
+    --maroon-deep:#4a0101;
+    --maroon-tint:#fdeceb;
+    --ink:#181818;
+    --muted:#767676;
+    --line:#ececec;
+    --bg:#f6f6f7;
+    --card:#ffffff;
+    --success:#2e7d4f;
+    --success-bg:#eaf6ef;
+    --warn:#b5750f;
+    --warn-bg:#fdf3e3;
+    --danger:#b3261e;
+    --danger-bg:#fdeceb;
+    --draft:#5b6b8c;
+    --draft-bg:#eaeefd;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+
+  /* ============ SHELL ============ */
+  .shell{ display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    background:#fff; border-right:1px solid var(--line);
+    display:flex; flex-direction:column; padding:20px 14px;
+  }
+  .sidebar-logo{ font-size:1.15rem; font-weight:800; color:var(--maroon); padding:6px 10px 20px; }
+  .nav-group-label{
+    font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--muted); padding:14px 10px 6px;
+  }
+  .nav-link{
+    display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:8px;
+    font-size:0.86rem; font-weight:600; color:var(--ink); text-decoration:none; cursor:pointer;
+  }
+  .nav-link svg{ width:17px;height:17px; flex-shrink:0; color:var(--muted); }
+  .nav-link.active{ background:var(--maroon-tint); color:var(--maroon); }
+  .nav-link.active svg{ color:var(--maroon); }
+  .nav-link:hover:not(.active){ background:var(--bg); }
+  .sidebar-foot{ margin-top:auto; display:flex; align-items:center; gap:10px; padding:12px 10px; border-top:1px solid var(--line); }
+  .avatar{ width:32px;height:32px;border-radius:50%; background:var(--maroon);color:#fff;
+    display:flex;align-items:center;justify-content:center; font-size:0.78rem;font-weight:700;flex-shrink:0; }
+  .sidebar-foot .name{ font-size:0.8rem; font-weight:700; }
+  .sidebar-foot .role{ font-size:0.7rem; color:var(--muted); }
+
+  /* ============ MAIN ============ */
+  .main{ display:flex; flex-direction:column; min-width:0; }
+  .topbar{
+    background:#fff; border-bottom:1px solid var(--line); padding:16px 28px;
+    display:flex; align-items:center; gap:16px;
+  }
+  .topbar h1{ font-size:1.1rem; font-weight:800; }
+  .topbar .sub{ font-size:0.78rem; color:var(--muted); margin-top:2px; }
+  .add-btn{
+    margin-left:auto;
+    background:var(--maroon); color:#fff; border:none; padding:9px 16px; border-radius:9px;
+    font-size:0.83rem; font-weight:700; display:flex; align-items:center; gap:6px; cursor:pointer;
+  }
+  .content{ padding:24px 28px; }
+
+  /* ============ STATUS TABS ============ */
+  .status-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+  .status-tab{
+    padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:#fff;
+    font-size:0.82rem; font-weight:600; color:var(--muted); cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .status-tab .count{
+    background:var(--bg); color:var(--muted); font-size:0.68rem; font-weight:700;
+    padding:1px 6px; border-radius:10px;
+  }
+  .status-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .status-tab.active .count{ background:rgba(255,255,255,0.2); color:#fff; }
+
+  /* ============ TOOLBAR ============ */
+  .table-toolbar{
+    background:var(--card); border:1px solid var(--line); border-radius:14px 14px 0 0;
+    padding:14px 18px; display:flex; align-items:center; gap:12px; border-bottom:none;
+  }
+  .search-box{
+    display:flex; align-items:center; gap:8px; background:var(--bg); border-radius:9px;
+    padding:9px 12px; flex:1; max-width:320px;
+  }
+  .search-box input{ border:none;background:none;outline:none;font-size:0.83rem;width:100%; }
+  .search-box svg{ color:var(--muted); flex-shrink:0; }
+  .filter-btn{
+    display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:9px;
+    border:1px solid var(--line); background:#fff; font-size:0.82rem; font-weight:600;
+    color:var(--ink); cursor:pointer;
+  }
+  select.filter-btn{ appearance:none; cursor:pointer; }
+
+  .bulk-bar{
+    display:none;
+    align-items:center;
+    gap:12px;
+    margin-left:auto;
+    background:var(--maroon-tint);
+    padding:8px 12px;
+    border-radius:9px;
+  }
+  .bulk-bar.show{ display:flex; }
+  .bulk-bar span{ font-size:0.8rem; font-weight:700; color:var(--maroon); }
+  .bulk-action{
+    font-size:0.78rem; font-weight:700; color:var(--maroon); background:#fff;
+    border:1px solid var(--maroon); padding:5px 10px; border-radius:7px; cursor:pointer;
+  }
+  .bulk-action.danger{ color:var(--danger); border-color:var(--danger); }
+
+  /* ============ TABLE PANEL ============ */
+  .table-panel{
+    background:var(--card); border:1px solid var(--line); border-top:none;
+    border-radius:0 0 14px 14px; overflow:hidden;
+  }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{
+    text-align:left; font-size:0.7rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.04em; color:var(--muted); padding:12px 10px; border-bottom:1px solid var(--line);
+    background:#fafafa; white-space:nowrap;
+  }
+  thead th.sortable{ cursor:pointer; user-select:none; }
+  thead th.sortable svg{ margin-left:4px; vertical-align:middle; }
+  tbody td{ padding:12px 10px; font-size:0.85rem; border-bottom:1px solid var(--line); vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:#fbfbfb; }
+
+  input[type="checkbox"]{ width:16px;height:16px; accent-color:var(--maroon); cursor:pointer; }
+
+  .item-cell{ display:flex; align-items:center; gap:10px; }
+  .item-cell img{ width:38px;height:46px;border-radius:6px;object-fit:cover;background:#f0ece7; flex-shrink:0; }
+  .item-title{ font-weight:600; }
+  .item-brand{ font-size:0.72rem; color:var(--muted); }
+
+  .price-cell .now{ font-weight:700; }
+  .price-cell .orig{ font-size:0.72rem; color:var(--muted); text-decoration:line-through; margin-left:4px; }
+
+  .condition-pill{
+    font-size:0.7rem; font-weight:700; padding:4px 9px; border-radius:20px; display:inline-block;
+  }
+  .cond-excellent{ background:var(--success-bg); color:var(--success); }
+  .cond-good{ background:var(--draft-bg); color:var(--draft); }
+  .cond-fair{ background:var(--warn-bg); color:var(--warn); }
+
+  .status-pill{ font-size:0.7rem; font-weight:700; padding:4px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; }
+  .status-pill::before{ content:''; width:6px;height:6px;border-radius:50%; }
+  .status-live{ background:var(--success-bg); color:var(--success); }
+  .status-live::before{ background:var(--success); }
+  .status-sold{ background:#efefef; color:var(--muted); }
+  .status-sold::before{ background:var(--muted); }
+  .status-draft{ background:var(--draft-bg); color:var(--draft); }
+  .status-draft::before{ background:var(--draft); }
+
+  .row-actions{ display:flex; gap:6px; justify-content:flex-end; }
+  .row-actions button{
+    width:30px;height:30px; border-radius:7px; border:1px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted);
+  }
+  .row-actions button:hover{ background:var(--bg); color:var(--ink); }
+  .row-actions button.danger:hover{ color:var(--danger); border-color:var(--danger); }
+
+  .views-cell{ color:var(--muted); }
+  .views-cell.low{ color:var(--warn); font-weight:700; }
+
+  /* ============ PAGINATION ============ */
+  .pagination{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-top:1px solid var(--line);
+  }
+  .pagination .info{ font-size:0.8rem; color:var(--muted); }
+  .page-btns{ display:flex; gap:6px; }
+  .page-btn{
+    width:30px;height:30px; border-radius:7px; border:1px solid var(--line); background:#fff;
+    font-size:0.8rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .page-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  @media (max-width:1000px){
+    .shell{ grid-template-columns:1fr; }
+    .sidebar{ display:none; }
+    .table-panel{ overflow-x:auto; }
+    table{ min-width:820px; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+  <div id="adminSidebarRoot"></div>
+
+  <!-- ===== SIDEBAR ===== -->
+
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+
+    <div class="topbar">
+      <div>
+        <h1>Products</h1>
+        <div class="sub" id="totalCount">Loading…</div>
+      </div>
+      <button class="add-btn" onclick="window.location.href='/admin/add-product.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Item
+      </button>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== STATUS TABS ===== -->
+      <div class="status-tabs">
+        <div class="status-tab active" data-filter="all">All <span class="count" id="countAll">0</span></div>
+        <div class="status-tab" data-filter="live">Live <span class="count" id="countLive">0</span></div>
+        <div class="status-tab" data-filter="sold">Sold <span class="count" id="countSold">0</span></div>
+        <div class="status-tab" data-filter="draft">Draft <span class="count" id="countDraft">0</span></div>
+      </div>
+
+      <!-- ===== TOOLBAR ===== -->
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Search by brand or title...">
+        </div>
+        <select class="filter-btn" id="categoryFilter">
+          <option value="">All Categories</option>
+          <option>Shirts</option>
+          <option>Outerwear</option>
+          <option>Footwear</option>
+          <option>Bags</option>
+          <option>Trousers</option>
+          <option>Accessories</option>
+        </select>
+        <select class="filter-btn" id="conditionFilter">
+          <option value="">All Conditions</option>
+          <option>Excellent</option>
+          <option>Good</option>
+          <option>Fair</option>
+        </select>
+
+        <div class="bulk-bar" id="bulkBar">
+          <span id="bulkCount">0 selected</span>
+          <button class="bulk-action" id="bulkMarkSold">Mark Sold</button>
+          <button class="bulk-action" id="bulkMoveDraft">Move to Draft</button>
+          <button class="bulk-action danger" id="bulkDelete">Delete</button>
+        </div>
+      </div>
+
+      <!-- ===== TABLE ===== -->
+      <div class="table-panel">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px;"><input type="checkbox" id="selectAll"></th>
+              <th>Item</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Condition</th>
+              <th>Views</th>
+              <th>Date Added</th>
+              <th>Status</th>
+              <th style="width:100px;"></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+
+        <div class="pagination">
+          <span class="info" id="paginationInfo">Loading…</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { renderAdminNav } from "../lib/admin-nav.js";
+  import { initAdminProducts } from "./js/admin-products.js";
+
+  renderAdminNav("products");   // Change this for each page
+  initAdminProducts();
+</script>
+<!-- <script type="module">
+import { requireAdmin } from "./js/admin-auth.js";
+import { getAllProductsForAdmin, markProductSold, updateProduct, deleteProduct } from "./js/products.js";
+
+requireAdmin(() => init());
+
+const condClass = { Excellent: "cond-excellent", Good: "cond-good", Fair: "cond-fair" };
+const statusLabel = { live: "Live", sold: "Sold", draft: "Draft" };
+
+const tbody = document.getElementById("tableBody");
+let allProducts = [];
+let currentFilter = "all";
+let currentSearch = "";
+let currentCategory = "";
+let currentCondition = "";
+
+async function init() {
+  allProducts = await getAllProductsForAdmin();
+  updateTabCounts();
+  applyFiltersAndRender();
+
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    currentSearch = e.target.value.toLowerCase();
+    applyFiltersAndRender();
+  });
+  document.getElementById("categoryFilter").addEventListener("change", (e) => {
+    currentCategory = e.target.value;
+    applyFiltersAndRender();
+  });
+  document.getElementById("conditionFilter").addEventListener("change", (e) => {
+    currentCondition = e.target.value;
+    applyFiltersAndRender();
+  });
+  document.querySelectorAll(".status-tab").forEach(tab => {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".status-tab").forEach(t => t.classList.remove("active"));
+      this.classList.add("active");
+      currentFilter = this.dataset.filter;
+      applyFiltersAndRender();
+    });
+  });
+  document.getElementById("selectAll").addEventListener("change", function () {
+    document.querySelectorAll(".row-check").forEach(cb => (cb.checked = this.checked));
+    updateBulkBar();
+  });
+  document.getElementById("bulkMarkSold").addEventListener("click", () => bulkAction("sold"));
+  document.getElementById("bulkMoveDraft").addEventListener("click", () => bulkAction("draft"));
+  document.getElementById("bulkDelete").addEventListener("click", () => bulkAction("delete"));
+}
+
+function updateTabCounts() {
+  document.getElementById("countAll").textContent = allProducts.length;
+  document.getElementById("countLive").textContent = allProducts.filter(p => p.status === "live").length;
+  document.getElementById("countSold").textContent = allProducts.filter(p => p.status === "sold").length;
+  document.getElementById("countDraft").textContent = allProducts.filter(p => p.status === "draft").length;
+  document.getElementById("totalCount").textContent = `${allProducts.length} total listings`;
+}
+
+function applyFiltersAndRender() {
+  let filtered = currentFilter === "all" ? allProducts : allProducts.filter(p => p.status === currentFilter);
+  if (currentSearch) {
+    filtered = filtered.filter(p =>
+      `${p.brand || ""} ${p.title || ""}`.toLowerCase().includes(currentSearch)
+    );
+  }
+  if (currentCategory) filtered = filtered.filter(p => p.category === currentCategory);
+  if (currentCondition) filtered = filtered.filter(p => p.condition === currentCondition);
+
+  render(filtered);
+  document.getElementById("paginationInfo").textContent = `Showing ${filtered.length} of ${allProducts.length}`;
+}
+
+function render(list) {
+  tbody.innerHTML = list.map(p => `
+    <tr>
+      <td><input type="checkbox" class="row-check" data-id="${p.id}"></td>
+      <td>
+        <div class="item-cell">
+          <img src="${(p.images && p.images[0]) || 'https://placehold.co/80x100/eee/999?text=Item'}">
+          <div><div class="item-title">${p.title || ''}</div><div class="item-brand">${p.brand || ''}</div></div>
+        </div>
+      </td>
+      <td>${p.category || '—'}</td>
+      <td class="price-cell"><span class="now">₦${Number(p.price || 0).toLocaleString()}</span>${p.originalPrice ? `<span class="orig">₦${Number(p.originalPrice).toLocaleString()}</span>` : ''}</td>
+      <td><span class="condition-pill ${condClass[p.condition] || ''}">${p.condition || '—'}</span></td>
+      <td class="views-cell ${(p.views || 0) < 10 ? 'low' : ''}">${p.views || 0}${(p.views || 0) < 10 ? ' ⚠' : ''}</td>
+      <td>${formatDate(p.createdAt)}</td>
+      <td><span class="status-pill status-${p.status}">${statusLabel[p.status] || p.status}</span></td>
+      <td>
+        <div class="row-actions">
+          <button aria-label="Edit" onclick="window.location.href='/admin/add-product.html?id=${p.id}'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="danger" aria-label="Delete" data-single-delete="${p.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg></button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  document.querySelectorAll(".row-check").forEach(cb => cb.addEventListener("change", updateBulkBar));
+  document.querySelectorAll("[data-single-delete]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Delete this listing permanently? This cannot be undone.")) return;
+      await deleteProduct(btn.dataset.singleDelete);
+      allProducts = allProducts.filter(p => p.id !== btn.dataset.singleDelete);
+      updateTabCounts();
+      applyFiltersAndRender();
+    });
+  });
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "—";
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleDateString("en-NG", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function updateBulkBar() {
+  const checked = document.querySelectorAll(".row-check:checked").length;
+  document.getElementById("bulkCount").textContent = checked + " selected";
+  document.getElementById("bulkBar").classList.toggle("show", checked > 0);
+}
+
+function getSelectedIds() {
+  return Array.from(document.querySelectorAll(".row-check:checked")).map(cb => cb.dataset.id);
+}
+
+async function bulkAction(action) {
+  const ids = getSelectedIds();
+  if (ids.length === 0) return;
+
+  if (action === "delete") {
+    if (!confirm(`Permanently delete ${ids.length} item(s)? This cannot be undone.`)) return;
+    await Promise.all(ids.map(id => deleteProduct(id)));
+    allProducts = allProducts.filter(p => !ids.includes(p.id));
+  } else if (action === "sold") {
+    await Promise.all(ids.map(id => markProductSold(id)));
+    allProducts = allProducts.map(p => ids.includes(p.id) ? { ...p, status: "sold" } : p);
+  } else if (action === "draft") {
+    await Promise.all(ids.map(id => updateProduct(id, { status: "draft" })));
+    allProducts = allProducts.map(p => ids.includes(p.id) ? { ...p, status: "draft" } : p);
+  }
+
+  document.getElementById("bulkBar").classList.remove("show");
+  document.getElementById("selectAll").checked = false;
+  updateTabCounts();
+  applyFiltersAndRender();
+}
+</script> -->
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE Admin — Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --maroon:#680202; --maroon-tint:#fdeceb; --ink:#181818; --muted:#767676; --line:#ececec;
+    --bg:#f6f6f7; --card:#ffffff; --success:#2e7d4f; --success-bg:#eaf6ef;
+    --warn:#b5750f; --warn-bg:#fdf3e3; --draft:#5b6b8c; --draft-bg:#eaeefd;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .shell{ display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  .sidebar{ background:#fff; border-right:1px solid var(--line); display:flex; flex-direction:column; padding:20px 14px; }
+  .sidebar-logo{ font-size:1.15rem; font-weight:800; color:var(--maroon); padding:6px 10px 20px; }
+  .nav-group-label{ font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); padding:14px 10px 6px; }
+  .nav-link{ display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:8px; font-size:0.86rem; font-weight:600; color:var(--ink); text-decoration:none; cursor:pointer; }
+  .nav-link svg{ width:17px;height:17px; flex-shrink:0; color:var(--muted); }
+  .nav-link.active{ background:var(--maroon-tint); color:var(--maroon); }
+  .nav-link.active svg{ color:var(--maroon); }
+  .nav-link:hover:not(.active){ background:var(--bg); }
+  .sidebar-foot{ margin-top:auto; display:flex; align-items:center; gap:10px; padding:12px 10px; border-top:1px solid var(--line); }
+  .avatar{ width:32px;height:32px;border-radius:50%; background:var(--maroon);color:#fff; display:flex;align-items:center;justify-content:center; font-size:0.78rem;font-weight:700;flex-shrink:0; }
+  .sidebar-foot .name{ font-size:0.8rem; font-weight:700; }
+  .sidebar-foot .role{ font-size:0.7rem; color:var(--muted); }
+
+  .main{ display:flex; flex-direction:column; min-width:0; }
+  .topbar{ background:#fff; border-bottom:1px solid var(--line); padding:16px 28px; display:flex; align-items:center; gap:16px; }
+  .topbar h1{ font-size:1.1rem; font-weight:800; }
+  .topbar .sub{ font-size:0.78rem; color:var(--muted); margin-top:2px; }
+  .content{ padding:24px 28px; }
+
+  .range-tabs{ display:flex; gap:6px; margin-bottom:18px; }
+  .range-tab{ padding:7px 14px; border-radius:8px; border:1px solid var(--line); background:#fff; font-size:0.8rem; font-weight:600; color:var(--muted); cursor:pointer; }
+  .range-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:20px; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .panel-head h3{ font-size:0.92rem; font-weight:700; }
+  .panel-head .note{ font-size:0.74rem; color:var(--muted); }
+
+  /* funnel */
+  .funnel{ display:flex; flex-direction:column; gap:10px; }
+  .funnel-row{ display:flex; align-items:center; gap:14px; }
+  .funnel-label{ width:150px; font-size:0.82rem; font-weight:600; flex-shrink:0; }
+  .funnel-bar-wrap{ flex:1; background:var(--bg); border-radius:8px; overflow:hidden; height:34px; position:relative; }
+  .funnel-bar{ height:100%; background:var(--maroon); border-radius:8px; display:flex; align-items:center; padding:0 12px; color:#fff; font-size:0.78rem; font-weight:700; transition:width .4s ease; }
+  .funnel-pct{ width:60px; text-align:right; font-size:0.82rem; font-weight:700; color:var(--muted); flex-shrink:0; }
+  .funnel-drop{ font-size:0.7rem; color:var(--warn); margin-left:164px; margin-top:-2px; margin-bottom:-2px; }
+
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .chart-wrap{ height:230px; position:relative; }
+
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ text-align:left; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); padding:10px 8px; border-bottom:1px solid var(--line); }
+  tbody td{ padding:10px 8px; font-size:0.83rem; border-bottom:1px solid var(--line); }
+  tbody tr:last-child td{ border-bottom:none; }
+  .flag{ font-size:0.68rem; font-weight:700; color:var(--warn); background:var(--warn-bg); padding:3px 8px; border-radius:10px; }
+
+  @media (max-width:1000px){
+    .shell{ grid-template-columns:1fr; } .sidebar{ display:none; }
+    .grid-2{ grid-template-columns:1fr; }
+    .funnel-label{ width:110px; font-size:0.76rem; }
+    .funnel-drop{ margin-left:124px; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+  <div id="adminSidebarRoot"></div>
+
+
+  <div class="main">
+    <div class="topbar"><div><h1>Analytics</h1><div class="sub">Understand how people behave on your store</div></div></div>
+    <div class="content">
+
+      <div class="range-tabs">
+        <div class="range-tab">7 Days</div>
+        <div class="range-tab active">30 Days</div>
+        <div class="range-tab">90 Days</div>
+      </div>
+
+      <!-- ===== FUNNEL ===== -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Shopping Funnel</h3>
+          <span class="note">Requires Firebase Analytics events — placeholder data below</span>
+        </div>
+        <div class="funnel">
+          <div class="funnel-row">
+            <div class="funnel-label">Product Views</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%">4,820</div></div>
+            <div class="funnel-pct">100%</div>
+          </div>
+          <div class="funnel-row">
+            <div class="funnel-label">Added to Bag</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:38%">1,832</div></div>
+            <div class="funnel-pct">38%</div>
+          </div>
+          <div class="funnel-drop">↓ 62% drop-off — mostly at condition report / price</div>
+          <div class="funnel-row">
+            <div class="funnel-label">Checkout Started</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:21%">1,012</div></div>
+            <div class="funnel-pct">21%</div>
+          </div>
+          <div class="funnel-drop">↓ 17% drop-off — cart abandonment</div>
+          <div class="funnel-row">
+            <div class="funnel-label">Order Completed</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:12%">231</div></div>
+            <div class="funnel-pct">12%</div>
+          </div>
+          <div class="funnel-drop">↓ 9% drop-off — mostly at payment step</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><h3>Traffic by Day</h3></div>
+          <div class="chart-wrap"><canvas id="trafficChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Traffic by Hour</h3></div>
+          <div class="chart-wrap"><canvas id="hourChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Viewed But Never Bought</h3>
+          <span class="note">High views, zero conversions — a pricing or condition-report signal</span>
+        </div>
+        <table>
+          <thead><tr><th>Item</th><th>Views</th><th>Added to Bag</th><th>Purchased</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Wool Blend Overcoat — Zara</td><td>156</td><td>28</td><td>0</td><td><span class="flag">Reprice?</span></td></tr>
+            <tr><td>Silk Pocket Square — Gucci</td><td>142</td><td>19</td><td>0</td><td><span class="flag">Reprice?</span></td></tr>
+            <tr><td>Track Jacket — Adidas</td><td>98</td><td>14</td><td>0</td><td><span class="flag">Reshoot?</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { renderAdminNav } from "../lib/admin-nav.js";
+
+  renderAdminNav("analytics");   // Change this for each page
+</script>
+<script>
+(function(){
+  new Chart(document.getElementById('trafficChart'), {
+    type:'line',
+    data:{ labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[{ data:[210,240,190,280,320,410,360], borderColor:'#680202', backgroundColor:'#68020222', fill:true, tension:0.4, pointRadius:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ y:{grid:{color:'#f0f0f0'}}, x:{grid:{display:false}} } }
+  });
+  new Chart(document.getElementById('hourChart'), {
+    type:'bar',
+    data:{ labels:['6a','9a','12p','3p','6p','9p','12a'],
+      datasets:[{ data:[40,120,180,160,260,310,90], backgroundColor:'#b5750f', borderRadius:5 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ y:{grid:{color:'#f0f0f0'}}, x:{grid:{display:false}} } }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE Admin — Settings</title>
+<style>
+  :root{
+    --maroon:#680202; --maroon-tint:#fdeceb; --ink:#181818; --muted:#767676; --line:#ececec;
+    --bg:#f6f6f7; --card:#ffffff; --success:#2e7d4f; --success-bg:#eaf6ef; --danger:#b3261e; --danger-bg:#fdeceb;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .shell{ display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  .sidebar{ background:#fff; border-right:1px solid var(--line); display:flex; flex-direction:column; padding:20px 14px; }
+  .sidebar-logo{ font-size:1.15rem; font-weight:800; color:var(--maroon); padding:6px 10px 20px; }
+  .nav-group-label{ font-size:0.66rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); padding:14px 10px 6px; }
+  .nav-link{ display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:8px; font-size:0.86rem; font-weight:600; color:var(--ink); text-decoration:none; cursor:pointer; }
+  .nav-link svg{ width:17px;height:17px; flex-shrink:0; color:var(--muted); }
+  .nav-link.active{ background:var(--maroon-tint); color:var(--maroon); }
+  .nav-link.active svg{ color:var(--maroon); }
+  .nav-link:hover:not(.active){ background:var(--bg); }
+  .sidebar-foot{ margin-top:auto; display:flex; align-items:center; gap:10px; padding:12px 10px; border-top:1px solid var(--line); }
+  .avatar{ width:32px;height:32px;border-radius:50%; background:var(--maroon);color:#fff; display:flex;align-items:center;justify-content:center; font-size:0.78rem;font-weight:700;flex-shrink:0; }
+  .sidebar-foot .name{ font-size:0.8rem; font-weight:700; }
+  .sidebar-foot .role{ font-size:0.7rem; color:var(--muted); }
+
+  .main{ display:flex; flex-direction:column; min-width:0; }
+  .topbar{ background:#fff; border-bottom:1px solid var(--line); padding:16px 28px; }
+  .topbar h1{ font-size:1.1rem; font-weight:800; }
+  .topbar .sub{ font-size:0.78rem; color:var(--muted); margin-top:2px; }
+  .content{ padding:24px 28px; display:grid; grid-template-columns:200px 1fr; gap:24px; max-width:1100px; }
+
+  .settings-nav{ display:flex; flex-direction:column; gap:4px; }
+  .settings-nav a{ padding:9px 12px; border-radius:8px; font-size:0.84rem; font-weight:600; color:var(--muted); cursor:pointer; }
+  .settings-nav a.active{ background:var(--maroon-tint); color:var(--maroon); }
+
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:20px; }
+  .panel h3{ font-size:0.92rem; font-weight:700; margin-bottom:4px; }
+  .panel .panel-sub{ font-size:0.78rem; color:var(--muted); margin-bottom:18px; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:0.8rem; font-weight:600; margin-bottom:7px; }
+  .field input[type="text"], .field input[type="number"], .field select{
+    width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 13px; font-size:0.86rem; outline:none;
+  }
+  .field input:focus{ border-color:var(--maroon); }
+  .row-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .toggle-row{ display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--line); }
+  .toggle-row:last-child{ border-bottom:none; }
+  .toggle-label{ font-size:0.85rem; font-weight:600; }
+  .toggle-sub{ font-size:0.74rem; color:var(--muted); margin-top:2px; }
+  .toggle{ position:relative; width:42px;height:24px; flex-shrink:0; }
+  .toggle input{ opacity:0; width:0;height:0; }
+  .toggle-track{ position:absolute; inset:0; background:var(--line); border-radius:20px; cursor:pointer; transition:.2s; }
+  .toggle-track::before{ content:''; position:absolute; width:18px;height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+  .toggle input:checked + .toggle-track{ background:var(--success); }
+  .toggle input:checked + .toggle-track::before{ transform:translateX(18px); }
+
+  .fee-row{ display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); }
+  .fee-row:last-child{ border-bottom:none; }
+  .fee-row .fee-name{ flex:1; font-size:0.85rem; font-weight:600; }
+  .fee-row input{ width:120px; border:1.5px solid var(--line); border-radius:8px; padding:8px 10px; font-size:0.85rem; }
+
+  .admin-row{ display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); }
+  .admin-row:last-child{ border-bottom:none; }
+  .admin-row .avatar{ width:36px;height:36px; }
+  .admin-row .name{ font-size:0.85rem; font-weight:700; }
+  .admin-row .email{ font-size:0.74rem; color:var(--muted); }
+  .role-tag{ font-size:0.68rem; font-weight:700; padding:3px 9px; border-radius:10px; background:var(--maroon-tint); color:var(--maroon); margin-left:auto; }
+  .remove-link{ font-size:0.78rem; color:var(--danger); font-weight:600; cursor:pointer; margin-left:10px; }
+
+  .btn{ border:none; padding:10px 18px; border-radius:9px; font-size:0.84rem; font-weight:700; cursor:pointer; }
+  .btn-primary{ background:var(--maroon); color:#fff; }
+  .btn-ghost{ background:#fff; border:1px solid var(--line); color:var(--ink); }
+  .btn-danger{ background:var(--danger-bg); color:var(--danger); }
+
+  .invite-row{ display:flex; gap:10px; margin-top:14px; }
+  .invite-row input{ flex:1; border:1.5px solid var(--line); border-radius:9px; padding:10px 13px; font-size:0.85rem; }
+
+  .danger-zone{ border-color:var(--danger-bg); }
+  .danger-zone h3{ color:var(--danger); }
+
+  @media (max-width:1000px){
+    .shell{ grid-template-columns:1fr; } .sidebar{ display:none; }
+    .content{ grid-template-columns:1fr; }
+    .settings-nav{ flex-direction:row; overflow-x:auto; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+ 
+  <div id="adminSidebarRoot"></div>
+
+  <div class="main">
+    <div class="topbar"><h1>Settings</h1><div class="sub">Store configuration and admin access</div></div>
+    <div class="content">
+
+      <div class="settings-nav">
+        <a class="active">Store Info</a>
+        <a>Delivery & Fees</a>
+        <a>Payments</a>
+        <a>Admin Users</a>
+        <a>Danger Zone</a>
+      </div>
+
+      <div>
+        <div class="panel">
+          <h3>Store Info</h3>
+          <div class="panel-sub">Basic details shown across the app</div>
+          <div class="field"><label>Store Name</label><input type="text" id="storeNameInput" value="AKUBASE"></div>
+          <div class="row-2">
+            <div class="field"><label>Support Phone</label><input type="text" id="supportPhoneInput" value="+234 810 000 0000"></div>
+            <div class="field"><label>Support Email</label><input type="text" id="supportEmailInput" value="hello@akubase.ng"></div>
+          </div>
+          <div class="field"><label>Store Address <span style="color:var(--muted); font-weight:400;">(for pickup orders)</span></label><input type="text" id="storeAddressInput" value="14 Adewale Street, Ikorodu, Lagos"></div>
+          <button class="btn btn-primary" id="saveSettingsBtn">Save Changes</button>
+        </div>
+
+        <div class="panel">
+          <h3>Delivery Fees</h3>
+          <div class="panel-sub">Rates shown at checkout</div>
+          <div class="fee-row"><span class="fee-name">Standard Delivery (3–5 days, nationwide)</span><input type="text" id="standardFeeInput" value="2000"></div>
+          <div class="fee-row"><span class="fee-name">Lagos Express (1–2 days, Lagos only)</span><input type="text" id="expressFeeInput" value="3500"></div>
+          <div class="fee-row"><span class="fee-name">Store Pickup</span><input type="text" id="pickupFeeInput" value="0"></div>
+          <div style="margin-top:14px;"><button class="btn btn-ghost">+ Add Delivery Option</button></div>
+        </div>
+
+        <div class="panel">
+          <h3>Payment Methods</h3>
+          <div class="panel-sub">Toggle which options customers see at checkout</div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Card / Bank Transfer</div><div class="toggle-sub">Powered by Paystack</div></div>
+            <label class="toggle"><input type="checkbox" id="cardToggle" checked><span class="toggle-track"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Pay on Delivery</div><div class="toggle-sub">Cash or transfer at doorstep</div></div>
+            <label class="toggle"><input type="checkbox" id="codToggle" checked><span class="toggle-track"></span></label>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Admin Users</h3>
+          <div class="panel-sub">People with access to this dashboard</div>
+          <div class="admin-row">
+            <div class="avatar">JO</div>
+            <div><div class="name">James Ojoagefu</div><div class="email">james@easblinktech.com.ng</div></div>
+            <span class="role-tag">Owner</span>
+          </div>
+          <div class="admin-row">
+            <div class="avatar" style="background:#5b6b8c;">TA</div>
+            <div><div class="name">Tolu A.</div><div class="email">tolu@easblinktech.com.ng</div></div>
+            <span class="role-tag" style="background:#eaeefd; color:#5b6b8c;">Editor</span>
+            <span class="remove-link">Remove</span>
+          </div>
+          <div class="invite-row">
+            <input type="text" placeholder="Invite by email...">
+            <button class="btn btn-primary">Invite</button>
+          </div>
+        </div>
+
+        <div class="panel danger-zone">
+          <h3>Danger Zone</h3>
+          <div class="panel-sub">These actions are permanent</div>
+          <button class="btn btn-danger">Deactivate Store Temporarily</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { renderAdminNav } from "../lib/admin-nav.js";
+  import { initAdminSettings } from "./js/admin-settings.js";
+
+  renderAdminNav("settings");   // Change this for each page
+  initAdminSettings();
+</script>
+</body>
+</html>

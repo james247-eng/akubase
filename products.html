@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE — Shop</title>
+<style>
+  :root{
+    --maroon:#680202;
+    --maroon-deep:#4a0101;
+    --ink:#1a1a1a;
+    --muted:#767676;
+    --line:#ececec;
+    --bg:#ffffff;
+    --success:#2e7d4f;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+  }
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:14px 18px;
+  }
+  .topbar-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .topbar h1{
+    font-size:1.2rem;
+    font-weight:800;
+    color:var(--maroon);
+    flex-shrink:0;
+  }
+  .search{
+    flex:1;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:#f3f3f3;
+    border-radius:10px;
+    padding:9px 12px;
+  }
+  .search svg{ flex-shrink:0; color:var(--muted); }
+  .search input{
+    border:none;
+    background:none;
+    outline:none;
+    font-size:0.85rem;
+    width:100%;
+    color:var(--ink);
+  }
+  .bag-btn{
+    flex-shrink:0;
+    width:38px;height:38px;
+    border-radius:50%;
+    border:none;
+    background:#f3f3f3;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    position:relative;
+  }
+  .bag-btn .badge{
+    position:absolute;
+    top:-2px; right:-2px;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--maroon);
+    color:#fff;
+    font-size:0.6rem;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .nav-badge--hidden{ display:none !important; }
+
+  /* ============ CATEGORY CHIPS ============ */
+  .categories{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:12px 18px 4px;
+    scrollbar-width:none;
+  }
+  .categories::-webkit-scrollbar{ display:none; }
+  .cat-chip{
+    flex-shrink:0;
+    padding:7px 15px;
+    border-radius:20px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-size:0.8rem;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .cat-chip.active{
+    background:var(--maroon);
+    border-color:var(--maroon);
+    color:#fff;
+  }
+
+  /* ============ SORT / FILTER BAR ============ */
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 18px 4px;
+  }
+  .result-count{
+    font-size:0.78rem;
+    color:var(--muted);
+    font-weight:500;
+  }
+  .toolbar-actions{ display:flex; gap:8px; }
+  .toolbar-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-size:0.78rem;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+  }
+
+  /* ============ GRID ============ */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:16px 12px;
+    padding:16px 18px 40px;
+  }
+
+  .card{ cursor:pointer; }
+  .card-image{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/5;
+    border-radius:12px;
+    overflow:hidden;
+    background:#f0ece7;
+  }
+  .card-image img{ width:100%;height:100%;object-fit:cover; }
+  .card-condition{
+    position:absolute;
+    top:8px;left:8px;
+    background:rgba(255,255,255,0.92);
+    color:var(--success);
+    font-size:0.62rem;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:12px;
+  }
+  .card-heart{
+    position:absolute;
+    top:8px;right:8px;
+    width:28px;height:28px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.92);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .card-heart svg{ width:14px;height:14px; }
+  .card-heart.active svg{ fill:var(--maroon); stroke:var(--maroon); }
+  .card-sold{
+    position:absolute;
+    inset:0;
+    background:rgba(255,255,255,0.75);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .card-sold span{
+    background:var(--ink);
+    color:#fff;
+    font-size:0.7rem;
+    font-weight:700;
+    letter-spacing:0.05em;
+    padding:5px 14px;
+    border-radius:20px;
+    text-transform:uppercase;
+  }
+  .card-body{ padding-top:9px; }
+  .card-brand{
+    font-size:0.66rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--maroon);
+  }
+  .card-title{
+    font-size:0.82rem;
+    font-weight:600;
+    color:var(--ink);
+    line-height:1.3;
+    margin-top:2px;
+    display:-webkit-box;
+    -webkit-line-clamp:1;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .card-price-row{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    margin-top:5px;
+  }
+  .card-price{ font-size:0.88rem; font-weight:800; color:var(--ink); }
+  .card-price-original{
+    font-size:0.68rem;
+    color:var(--muted);
+    text-decoration:line-through;
+  }
+
+  /* ============ RESPONSIVE GRID ============ */
+  @media (min-width:600px){
+    .grid{ grid-template-columns: repeat(3, 1fr); gap:20px 16px; padding:20px 24px 48px; }
+    .topbar, .categories, .toolbar{ padding-left:24px; padding-right:24px; }
+  }
+  @media (min-width:900px){
+    .grid{ grid-template-columns: repeat(4, 1fr); max-width:1200px; margin:0 auto; padding:24px 24px 56px; }
+    .topbar, .categories, .toolbar{ max-width:1200px; margin:0 auto; padding-left:24px; padding-right:24px; width:100%; }
+    .topbar{ display:flex; justify-content:center; }
+    .topbar-row{ max-width:1200px; width:100%; }
+  }
+  @media (min-width:1280px){
+    .grid{ grid-template-columns: repeat(5, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== TOP BAR ===== -->
+  <div class="topbar">
+    <div class="topbar-row">
+      <h1>AKUBASE</h1>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Search brand, item, category..." readonly onclick="window.location.href='/search.html'">
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CATEGORIES ===== -->
+  <div class="categories">
+    <div class="cat-chip active" data-category="All">All</div>
+    <div class="cat-chip" data-category="Shirts">Shirts</div>
+    <div class="cat-chip" data-category="Outerwear">Outerwear</div>
+    <div class="cat-chip" data-category="Footwear">Footwear</div>
+    <div class="cat-chip" data-category="Bags">Bags</div>
+    <div class="cat-chip" data-category="Trousers">Trousers</div>
+    <div class="cat-chip" data-category="Accessories">Accessories</div>
+  </div>
+
+  <!-- ===== TOOLBAR ===== -->
+  <div class="toolbar">
+    <span class="result-count" id="resultCount">Loading…</span>
+    <div class="toolbar-actions">
+      <button class="toolbar-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filter
+      </button>
+      <button class="toolbar-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M10 18h4"/></svg>
+        Sort
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== GRID ===== -->
+  <div class="grid" id="grid"></div>
+  <div style="text-align:center; padding:0 18px 40px;">
+    <button id="loadMoreBtn" style="display:none; padding:11px 24px; border-radius:9px; border:1.5px solid var(--line); background:#fff; font-weight:700; font-size:0.85rem; cursor:pointer;">Load More</button>
+  </div>
+
+  <div id="bottomNavRoot"></div>
+  <div style="height:70px;"></div> <!-- clearance so the last grid row isn't hidden behind the fixed nav on mobile -->
+
+<script type="module">
+import { getLiveProducts } from "./js/products.js";
+import { isWishlisted, toggleWishlist } from "./js/wishlist.js";
+import { renderBottomNav } from "./js/bottom-nav.js";
+
+renderBottomNav("home");
+
+const grid = document.getElementById("grid");
+const resultCount = document.getElementById("resultCount");
+const loadMoreBtn = document.getElementById("loadMoreBtn");
+
+let currentCategory = "All";
+let lastDoc = null;
+let allLoaded = []; // accumulated across "Load More" clicks
+
+async function loadPage(reset = false) {
+  if (reset) {
+    allLoaded = [];
+    lastDoc = null;
+    grid.innerHTML = "";
+    resultCount.textContent = "Loading…";
+  }
+
+  const { items, lastDoc: newLastDoc } = await getLiveProducts({
+    category: currentCategory,
+    pageSize: 12,
+    afterDoc: lastDoc
+  });
+
+  lastDoc = newLastDoc;
+  allLoaded = allLoaded.concat(items);
+  renderGrid(allLoaded);
+
+  resultCount.textContent = `${allLoaded.length} item${allLoaded.length !== 1 ? "s" : ""}`;
+  loadMoreBtn.style.display = items.length === 12 ? "inline-block" : "none";
+}
+
+function renderGrid(products) {
+  grid.innerHTML = products.map(p => `
+    <div class="card" data-id="${p.id}">
+      <div class="card-image">
+        <img src="${(p.images && p.images[0]) || `https://placehold.co/300x375/680202/ffffff?text=${encodeURIComponent(p.brand || 'Item')}`}" alt="${p.title || ''}">
+        <div class="card-condition">${p.condition || ''}</div>
+        <div class="card-heart ${isWishlisted(p.id) ? 'active' : ''}" data-heart="${p.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-brand">${p.brand || ''}</div>
+        <div class="card-title">${p.title || ''}</div>
+        <div class="card-price-row">
+          <span class="card-price">₦${Number(p.price || 0).toLocaleString()}</span>
+          ${p.originalPrice ? `<span class="card-price-original">₦${Number(p.originalPrice).toLocaleString()}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join("") || `<p style="grid-column:1/-1; text-align:center; color:var(--muted); padding:60px 20px;">No items in this category yet — check back soon.</p>`;
+}
+
+grid.addEventListener("click", (e) => {
+  const heart = e.target.closest("[data-heart]");
+  if (heart) {
+    e.stopPropagation();
+    toggleWishlist(heart.dataset.heart);
+    heart.classList.toggle("active");
+    return;
+  }
+  const card = e.target.closest(".card");
+  if (card) {
+    window.location.href = `/product-details.html?id=${card.dataset.id}`;
+  }
+});
+
+document.querySelectorAll(".cat-chip").forEach(chip => {
+  chip.addEventListener("click", function () {
+    document.querySelectorAll(".cat-chip").forEach(c => c.classList.remove("active"));
+    this.classList.add("active");
+    currentCategory = this.dataset.category;
+    loadPage(true);
+  });
+});
+
+loadMoreBtn.addEventListener("click", () => loadPage(false));
+
+loadPage(true);
+</script>
+
+</body>
+</html>

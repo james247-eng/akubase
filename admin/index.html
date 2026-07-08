@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AKUBASE Admin — Overview</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --maroon:#680202;
+    --maroon-deep:#4a0101;
+    --maroon-tint:#fdeceb;
+    --ink:#181818;
+    --muted:#767676;
+    --line:#ececec;
+    --bg:#f6f6f7;
+    --card:#ffffff;
+    --success:#2e7d4f;
+    --success-bg:#eaf6ef;
+    --warn:#b5750f;
+    --warn-bg:#fdf3e3;
+    --danger:#b3261e;
+    --danger-bg:#fdeceb;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+
+  /* ============ SHELL ============ */
+  .shell{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    min-height:100vh;
+  }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    background:#fff;
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    padding:20px 14px;
+  }
+  .sidebar-logo{
+    font-size:1.15rem;
+    font-weight:800;
+    color:var(--maroon);
+    padding:6px 10px 20px;
+  }
+  .nav-group-label{
+    font-size:0.66rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+    padding:14px 10px 6px;
+  }
+  .nav-link{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 10px;
+    border-radius:8px;
+    font-size:0.86rem;
+    font-weight:600;
+    color:var(--ink);
+    text-decoration:none;
+    cursor:pointer;
+  }
+  .nav-link svg{ width:17px;height:17px; flex-shrink:0; color:var(--muted); }
+  .nav-link.active{ background:var(--maroon-tint); color:var(--maroon); }
+  .nav-link.active svg{ color:var(--maroon); }
+  .nav-link:hover:not(.active){ background:var(--bg); }
+  .sidebar-foot{
+    margin-top:auto;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 10px;
+    border-top:1px solid var(--line);
+  }
+  .avatar{
+    width:32px;height:32px;border-radius:50%;
+    background:var(--maroon);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.78rem;font-weight:700;flex-shrink:0;
+  }
+  .sidebar-foot .name{ font-size:0.8rem; font-weight:700; }
+  .sidebar-foot .role{ font-size:0.7rem; color:var(--muted); }
+
+  /* ============ MAIN ============ */
+  .main{ display:flex; flex-direction:column; min-width:0; }
+
+  .topbar{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:16px 28px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+  }
+  .topbar h1{ font-size:1.1rem; font-weight:800; }
+  .topbar .sub{ font-size:0.78rem; color:var(--muted); margin-top:2px; }
+  .topbar-search{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--bg);
+    border-radius:9px;
+    padding:8px 12px;
+    width:260px;
+  }
+  .topbar-search input{ border:none;background:none;outline:none;font-size:0.83rem;width:100%; }
+  .topbar-search svg{ color:var(--muted); flex-shrink:0; }
+  .icon-btn{
+    width:36px;height:36px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#fff;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    position:relative;
+  }
+  .icon-btn .dot{
+    position:absolute;top:7px;right:7px;
+    width:7px;height:7px;border-radius:50%;
+    background:var(--maroon);
+  }
+  .add-btn{
+    background:var(--maroon);
+    color:#fff;
+    border:none;
+    padding:9px 16px;
+    border-radius:9px;
+    font-size:0.83rem;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+
+  .content{ padding:24px 28px; }
+
+  /* ============ RANGE TABS ============ */
+  .range-tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:18px;
+  }
+  .range-tab{
+    padding:7px 14px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-size:0.8rem;
+    font-weight:600;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .range-tab.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  /* ============ KPI GRID ============ */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:16px;
+    margin-bottom:20px;
+  }
+  .kpi-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+  }
+  .kpi-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:10px;
+  }
+  .kpi-label{ font-size:0.78rem; color:var(--muted); font-weight:600; }
+  .kpi-icon{
+    width:30px;height:30px;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .kpi-value{ font-size:1.5rem; font-weight:800; margin-bottom:6px; }
+  .kpi-change{
+    font-size:0.76rem;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    color:var(--muted);
+  }
+  .kpi-change.up{ color:var(--success); }
+  .kpi-change.down{ color:var(--danger); }
+  .kpi-change .period{ color:var(--muted); font-weight:500; margin-left:2px; }
+  .sparkline{ margin-top:10px; height:32px; }
+
+  /* ============ TWO COLUMN CHART ROW ============ */
+  .chart-row{
+    display:grid;
+    grid-template-columns:1.6fr 1fr;
+    gap:16px;
+    margin-bottom:20px;
+  }
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+  }
+  .panel-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .panel-head h3{ font-size:0.92rem; font-weight:700; }
+  .panel-head .note{ font-size:0.72rem; color:var(--muted); font-weight:500; }
+  .panel-head .link{ font-size:0.78rem; color:var(--maroon); font-weight:600; cursor:pointer; text-decoration:none; }
+  .chart-wrap{ height:220px; position:relative; }
+
+  .donut-legend{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .legend-row{ display:flex; align-items:center; gap:8px; font-size:0.82rem; }
+  .legend-dot{ width:9px;height:9px;border-radius:50%; flex-shrink:0; }
+  .legend-row span.name{ flex:1; color:var(--ink); font-weight:600; }
+  .legend-row span.pct{ color:var(--muted); font-weight:600; }
+
+  /* ============ LOWER GRID ============ */
+  .lower-grid{
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:16px;
+  }
+
+  /* table */
+  table{ width:100%; border-collapse:collapse; }
+  th{
+    text-align:left;
+    font-size:0.7rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--muted);
+    padding:0 8px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    padding:10px 8px;
+    font-size:0.83rem;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  tr:last-child td{ border-bottom:none; }
+  .item-cell{ display:flex; align-items:center; gap:10px; }
+  .item-cell img{ width:36px;height:44px;border-radius:6px;object-fit:cover;background:#f0ece7; }
+  .item-title{ font-weight:600; }
+  .item-brand{ font-size:0.72rem; color:var(--muted); }
+  .status-pill{
+    font-size:0.68rem;
+    font-weight:700;
+    padding:4px 9px;
+    border-radius:20px;
+    display:inline-block;
+  }
+  .status-live{ background:var(--success-bg); color:var(--success); }
+  .status-sold{ background:#efefef; color:var(--muted); }
+  .status-draft{ background:#eaeefd; color:#5b6b8c; }
+  .views-cell{ color:var(--muted); }
+  .views-cell.low{ color:var(--warn); font-weight:700; }
+
+  /* alerts / order feed */
+  .feed-item{
+    display:flex;
+    gap:10px;
+    padding:11px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .feed-item:last-child{ border-bottom:none; }
+  .feed-icon{
+    width:32px;height:32px;
+    border-radius:8px;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .feed-body{ flex:1; min-width:0; }
+  .feed-title{ font-size:0.82rem; font-weight:600; }
+  .feed-sub{ font-size:0.74rem; color:var(--muted); margin-top:2px; }
+  .feed-time{ font-size:0.7rem; color:var(--muted); flex-shrink:0; white-space:nowrap; }
+
+  .alert-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:11px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .alert-row:last-child{ border-bottom:none; }
+  .alert-title{ font-size:0.82rem; font-weight:600; }
+  .alert-sub{ font-size:0.74rem; color:var(--warn); margin-top:2px; font-weight:600; }
+  .alert-action{
+    font-size:0.75rem;
+    font-weight:700;
+    color:var(--maroon);
+    background:var(--maroon-tint);
+    padding:5px 10px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+
+  /* stock health strip */
+  .health-strip{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+    margin-top:16px;
+  }
+  .health-box{
+    text-align:center;
+    padding:14px 8px;
+    border-radius:10px;
+  }
+  .health-box .num{ font-size:1.3rem; font-weight:800; }
+  .health-box .lbl{ font-size:0.7rem; color:var(--muted); font-weight:600; margin-top:2px; }
+
+  @media (max-width:1000px){
+    .shell{ grid-template-columns:1fr; }
+    .sidebar{ display:none; }
+    .kpi-grid{ grid-template-columns:repeat(2,1fr); }
+    .chart-row, .lower-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+  <div id="adminSidebarRoot"></div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+
+    <div class="topbar">
+      <div>
+        <h1>Overview</h1>
+        <div class="sub">Welcome back — here's how the store is doing</div>
+      </div>
+      <div class="topbar-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search products, orders...">
+      </div>
+      <button class="icon-btn" aria-label="Notifications">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+      </button>
+      <button class="add-btn" onclick="window.location.href='/admin/add-product.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Item
+      </button>
+    </div>
+
+    <div class="content">
+
+      <div class="range-tabs">
+        <div class="range-tab" data-range="today">Today</div>
+        <div class="range-tab active" data-range="7d">7 Days</div>
+        <div class="range-tab" data-range="30d">30 Days</div>
+        <div class="range-tab" data-range="all">All Time</div>
+      </div>
+
+      <!-- ===== KPI GRID ===== -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Revenue</span>
+            <div class="kpi-icon" style="background:var(--success-bg)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiRevenueValue">₦0</div>
+          <span class="kpi-change" id="kpiRevenueChange"></span>
+          <div class="sparkline"><canvas id="sparkRevenue"></canvas></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Orders</span>
+            <div class="kpi-icon" style="background:var(--maroon-tint)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" stroke-width="2"><path d="M9 2h6l1 4H8l1-4z"/><path d="M4 6h16l-1.5 14a2 2 0 01-2 1.8H7.5A2 2 0 015.5 20L4 6z"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiOrdersValue">0</div>
+          <span class="kpi-change" id="kpiOrdersChange"></span>
+          <div class="sparkline"><canvas id="sparkOrders"></canvas></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Items Sold</span>
+            <div class="kpi-icon" style="background:var(--warn-bg)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M20 12V8H6a2 2 0 010-4h12v4"/><path d="M4 6v12a2 2 0 002 2h14v-4"/><circle cx="18" cy="16" r="1"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiItemsValue">0</div>
+          <span class="kpi-change" id="kpiItemsChange"></span>
+          <div class="sparkline"><canvas id="sparkItems"></canvas></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Avg. Order Value</span>
+            <div class="kpi-icon" style="background:#eaeefd">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3355cc" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 3 5-8"/></svg>
+            </div>
+          </div>
+          <div class="kpi-value" id="kpiAovValue">₦0</div>
+          <span class="kpi-change" id="kpiAovChange"></span>
+          <div class="sparkline"><canvas id="sparkAov"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ===== CHART ROW ===== -->
+      <div class="chart-row">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Revenue Trend</h3>
+          </div>
+          <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Live Listings by Category</h3>
+          </div>
+          <div class="chart-wrap" style="height:150px;"><canvas id="categoryChart"></canvas></div>
+          <div class="donut-legend" id="categoryLegend"></div>
+        </div>
+      </div>
+
+      <!-- ===== LOWER GRID ===== -->
+      <div class="lower-grid">
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Top Performing Items</h3>
+            <a class="link" href="/admin/products.html">View all products</a>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Item</th><th>Category</th><th>Views</th><th>Days Listed</th><th>Status</th></tr>
+            </thead>
+            <tbody id="topItemsBody">
+              <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">Loading…</td></tr>
+            </tbody>
+          </table>
+
+          <div class="health-strip">
+            <div class="health-box" style="background:var(--success-bg)">
+              <div class="num" style="color:var(--success)" id="healthLive">—</div>
+              <div class="lbl">Live Listings</div>
+            </div>
+            <div class="health-box" style="background:#efefef">
+              <div class="num" id="healthSold">—</div>
+              <div class="lbl">Sold</div>
+            </div>
+            <div class="health-box" style="background:var(--warn-bg)">
+              <div class="num" style="color:var(--warn)" id="healthAttention">—</div>
+              <div class="lbl">Needs Attention</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="panel-head">
+              <h3>Recent Orders</h3>
+              <a class="link" href="/admin/orders.html">View all</a>
+            </div>
+            <div id="recentOrdersFeed">
+              <p style="font-size:0.82rem;color:var(--muted);padding:12px 0;">Loading…</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Needs Attention</h3>
+            </div>
+            <div id="needsAttentionList">
+              <p style="font-size:0.82rem;color:var(--muted);padding:12px 0;">Loading…</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { renderAdminNav } from "../lib/admin-nav.js";
+  import { initAdminOverview } from "./js/admin-overview.js";
+
+  renderAdminNav("overview");
+  initAdminOverview();
+</script>
+</body>
+</html>
