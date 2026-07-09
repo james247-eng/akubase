@@ -3,9 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AKUBASE — Profile</title>
+<title>Emesmania — Profile</title>
 <style>
-  :root{ --maroon:#680202; --maroon-tint:#fdeceb; --ink:#1a1a1a; --muted:#767676; --line:#ececec; --bg:#ffffff; --danger:#b3261e; }
+  :root{    --maroon-deep:   #0A0A0A;
+    --maroon:        #141414;
+    --maroon-light:  #1F1F1F;
+    --cream:         #FFFFFF;
+    --gold:          #D9D9D9;
+    --gold-dim:      #8A8A8A;
+    --text-on-cream: #0A0A0A;
+ }
   *{ margin:0; padding:0; box-sizing:border-box; }
   body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f7f7f7; }
   .app{ max-width:520px; margin:0 auto; background:var(--bg); min-height:100vh; padding-bottom:80px; }
@@ -103,7 +110,7 @@
       </div>
     </div>
 
-    <div class="app-version">AKUBASE v1.0.0</div>
+    <div class="app-version">Emesmania v1.0.0</div>
   </div>
 
   <div class="signed-out" id="signedOutState">
@@ -137,7 +144,7 @@ onAuthStateChanged(auth, async (user) => {
   signedOutState.style.display = "none";
   profileContent.style.display = "block";
 
-  const name = user.displayName || "AKUBASE Shopper";
+  const name = user.displayName || "Emesmania Shopper";
   document.getElementById("profileName").textContent = name;
   document.getElementById("profileEmail").textContent = user.email || "";
   document.getElementById("avatarInitials").textContent = initials(name);
